@@ -1,0 +1,1208 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "BhashaAI Backend",
+    "description": "\n## BhashaAI - Generative AI for Education & Gujarati Language Technologies\n\nA comprehensive API for educational AI services supporting:\n\n- **Question Paper Generation** - AI-powered question paper creation from educational content\n- **Assignment Help** - Socratic tutoring and step-by-step solutions\n- **Teaching Tools** - Mind maps, slides, and study materials generation\n- **Paper Checking** - OCR-based automated evaluation with Gujarati support\n- **Gujarati Learning** - Vocabulary, grammar, and gamified learning\n- **Audio Services** - STT/TTS for Gujarati language\n\n### Authentication\nAll protected endpoints require JWT Bearer token authentication.\n\n### Bilingual Support\nResponses include both English and Gujarati (ગુજરાતી) messages.\n        ",
+    "contact": {
+      "name": "BhashaAI Team",
+      "email": "support@bhashaai.com"
+    },
+    "license": {
+      "name": "MIT License",
+      "url": "https://opensource.org/licenses/MIT"
+    },
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Health Check",
+        "description": "Check the health status of the API and its dependencies.",
+        "operationId": "health_check_api_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Service is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse_HealthResponse_"
+                },
+                "example": {
+                  "success": true,
+                  "data": {
+                    "status": "healthy",
+                    "version": "0.1.0",
+                    "environment": "development",
+                    "services": {
+                      "database": "connected",
+                      "redis": "connected",
+                      "minio": "connected"
+                    }
+                  },
+                  "message": "Service is healthy",
+                  "message_gu": "સેવા સ્વસ્થ છે"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service is unhealthy or degraded"
+          }
+        }
+      }
+    },
+    "/api/v1/health/ready": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Readiness Check",
+        "description": "Check if the service is ready to handle requests (includes DB check).",
+        "operationId": "readiness_check_api_v1_health_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse_dict_str__Any__"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/health/live": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Liveness Check",
+        "description": "Simple liveness probe for container orchestration.",
+        "operationId": "liveness_check_api_v1_health_live_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Liveness Check Api V1 Health Live Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "tags": [
+          "Authentication",
+          "Authentication"
+        ],
+        "summary": "Register a new user",
+        "description": "Create a new user account. Default role is 'student'.",
+        "operationId": "register_api_v1_auth_register_post",
+        "parameters": [
+          {
+            "name": "role",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "student",
+              "title": "Role"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse_AuthResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": [
+          "Authentication",
+          "Authentication"
+        ],
+        "summary": "Login with email and password",
+        "description": "Authenticate user and receive JWT tokens.",
+        "operationId": "login_api_v1_auth_login_post",
+        "parameters": [
+          {
+            "name": "user-agent",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "User-Agent"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserLogin"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse_AuthResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "tags": [
+          "Authentication",
+          "Authentication"
+        ],
+        "summary": "Refresh access token",
+        "description": "Get new access token using refresh token.",
+        "operationId": "refresh_token_api_v1_auth_refresh_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenRefresh"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse_TokenResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "tags": [
+          "Authentication",
+          "Authentication"
+        ],
+        "summary": "Logout current session",
+        "description": "Invalidate the current refresh token.",
+        "operationId": "logout_api_v1_auth_logout_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenRefresh"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse_dict_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "tags": [
+          "Authentication",
+          "Authentication"
+        ],
+        "summary": "Get current user",
+        "description": "Get the currently authenticated user's profile.",
+        "operationId": "get_me_api_v1_auth_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse_UserResponse_"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/logout-all": {
+      "post": {
+        "tags": [
+          "Authentication",
+          "Authentication"
+        ],
+        "summary": "Logout from all devices",
+        "description": "Invalidate all refresh tokens for the current user.",
+        "operationId": "logout_all_api_v1_auth_logout_all_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse_dict_"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "APIResponse_AuthResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether the operation was successful"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AuthResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Response data payload"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message",
+            "description": "Human-readable message (English)"
+          },
+          "message_gu": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message Gu",
+            "description": "Human-readable message (Gujarati / ગુજરાતી)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success"
+        ],
+        "title": "APIResponse[AuthResponse]"
+      },
+      "APIResponse_HealthResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether the operation was successful"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HealthResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Response data payload"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message",
+            "description": "Human-readable message (English)"
+          },
+          "message_gu": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message Gu",
+            "description": "Human-readable message (Gujarati / ગુજરાતી)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success"
+        ],
+        "title": "APIResponse[HealthResponse]"
+      },
+      "APIResponse_TokenResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether the operation was successful"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TokenResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Response data payload"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message",
+            "description": "Human-readable message (English)"
+          },
+          "message_gu": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message Gu",
+            "description": "Human-readable message (Gujarati / ગુજરાતી)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success"
+        ],
+        "title": "APIResponse[TokenResponse]"
+      },
+      "APIResponse_UserResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether the operation was successful"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Response data payload"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message",
+            "description": "Human-readable message (English)"
+          },
+          "message_gu": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message Gu",
+            "description": "Human-readable message (Gujarati / ગુજરાતી)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success"
+        ],
+        "title": "APIResponse[UserResponse]"
+      },
+      "APIResponse_dict_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether the operation was successful"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data",
+            "description": "Response data payload"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message",
+            "description": "Human-readable message (English)"
+          },
+          "message_gu": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message Gu",
+            "description": "Human-readable message (Gujarati / ગુજરાતી)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success"
+        ],
+        "title": "APIResponse[dict]"
+      },
+      "APIResponse_dict_str__Any__": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether the operation was successful"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data",
+            "description": "Response data payload"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message",
+            "description": "Human-readable message (English)"
+          },
+          "message_gu": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message Gu",
+            "description": "Human-readable message (Gujarati / ગુજરાતી)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success"
+        ],
+        "title": "APIResponse[dict[str, Any]]"
+      },
+      "AuthResponse": {
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/UserResponse"
+          },
+          "tokens": {
+            "$ref": "#/components/schemas/TokenResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user",
+          "tokens"
+        ],
+        "title": "AuthResponse",
+        "description": "Response after login/registration.\n\nIncludes user info and tokens."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Service health status"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version",
+            "description": "Application version"
+          },
+          "environment": {
+            "type": "string",
+            "title": "Environment",
+            "description": "Current environment"
+          },
+          "services": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Services",
+            "description": "Status of dependent services"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "version",
+          "environment"
+        ],
+        "title": "HealthResponse",
+        "description": "Health check response schema.\n\nAttributes:\n    status: Service status (healthy, degraded, unhealthy)\n    version: Application version\n    environment: Current environment\n    services: Status of dependent services"
+      },
+      "InstitutionBrief": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "name_gujarati": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name Gujarati"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "type"
+        ],
+        "title": "InstitutionBrief",
+        "description": "Brief institution info for user responses."
+      },
+      "LanguagePreference": {
+        "type": "string",
+        "enum": [
+          "gu",
+          "en",
+          "gu-en"
+        ],
+        "title": "LanguagePreference",
+        "description": "User language preference for AI responses."
+      },
+      "RoleResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "display_name_gujarati": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name Gujarati"
+          },
+          "permissions": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Permissions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "RoleResponse",
+        "description": "Role information in responses."
+      },
+      "TokenRefresh": {
+        "properties": {
+          "refresh_token": {
+            "type": "string",
+            "title": "Refresh Token",
+            "description": "JWT refresh token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "refresh_token"
+        ],
+        "title": "TokenRefresh",
+        "description": "Schema for token refresh request."
+      },
+      "TokenResponse": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "refresh_token": {
+            "type": "string",
+            "title": "Refresh Token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "default": "bearer"
+          },
+          "expires_in": {
+            "type": "integer",
+            "title": "Expires In",
+            "description": "Token expiry in seconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "refresh_token",
+          "expires_in"
+        ],
+        "title": "TokenResponse",
+        "description": "Token response after successful authentication.\n\nAttributes:\n    access_token: JWT access token (short-lived)\n    refresh_token: JWT refresh token (long-lived)\n    token_type: Always \"bearer\"\n    expires_in: Access token TTL in seconds"
+      },
+      "UserCreate": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email",
+            "description": "User email address"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 8,
+            "title": "Password",
+            "description": "Password (min 8 characters)"
+          },
+          "full_name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 2,
+            "title": "Full Name",
+            "description": "Full name in English"
+          },
+          "full_name_gujarati": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name Gujarati",
+            "description": "Full name in Gujarati"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone",
+            "description": "Phone number"
+          },
+          "language_preference": {
+            "$ref": "#/components/schemas/LanguagePreference",
+            "description": "Preferred language for AI responses",
+            "default": "gu"
+          },
+          "grade_level": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade Level",
+            "description": "Student's grade level"
+          },
+          "institution_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Institution Id",
+            "description": "Associated institution ID"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password",
+          "full_name"
+        ],
+        "title": "UserCreate",
+        "description": "Schema for user registration.\n\nAttributes:\n    email: Valid email address\n    password: Password (min 8 chars)\n    full_name: User's full name\n    full_name_gujarati: Name in Gujarati (optional)\n    phone: Phone number (optional)\n    language_preference: Preferred language (default: Gujarati)\n    grade_level: For students (optional)\n    institution_id: Associated institution (optional)"
+      },
+      "UserLogin": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email",
+            "description": "Email address"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password",
+            "description": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "UserLogin",
+        "description": "Schema for user login.\n\nAttributes:\n    email: User's email address\n    password: User's password"
+      },
+      "UserResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "full_name": {
+            "type": "string",
+            "title": "Full Name"
+          },
+          "full_name_gujarati": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name Gujarati"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "profile_image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profile Image Url"
+          },
+          "language_preference": {
+            "$ref": "#/components/schemas/LanguagePreference"
+          },
+          "grade_level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade Level"
+          },
+          "subjects": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subjects"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "is_email_verified": {
+            "type": "boolean",
+            "title": "Is Email Verified"
+          },
+          "last_login_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Login At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RoleResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "institution": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InstitutionBrief"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "full_name",
+          "language_preference",
+          "is_active",
+          "is_email_verified",
+          "created_at"
+        ],
+        "title": "UserResponse",
+        "description": "User response schema.\n\nUsed for returning user data in API responses."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT access token obtained from /api/v1/auth/login"
+      },
+      "RefreshToken": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Refresh-Token",
+        "description": "JWT refresh token for obtaining new access tokens"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Health",
+      "description": "Health check and service status endpoints"
+    },
+    {
+      "name": "Authentication",
+      "description": "User registration, login, and token management"
+    },
+    {
+      "name": "Question Papers",
+      "description": "AI-powered question paper generation and management"
+    },
+    {
+      "name": "Assignments",
+      "description": "Assignment submission and AI-generated solutions"
+    },
+    {
+      "name": "Help Sessions",
+      "description": "Socratic tutoring and interactive help"
+    },
+    {
+      "name": "Teaching Tools",
+      "description": "Mind maps, slides, and educational materials"
+    },
+    {
+      "name": "Paper Checking",
+      "description": "OCR-based paper evaluation and grading"
+    },
+    {
+      "name": "Learning",
+      "description": "Gujarati language learning features"
+    },
+    {
+      "name": "Audio",
+      "description": "Speech-to-text and text-to-speech services"
+    }
+  ],
+  "servers": [
+    {
+      "url": "http://localhost:8000",
+      "description": "Development server"
+    },
+    {
+      "url": "https://api.bhashaai.com",
+      "description": "Production server"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+"""
+BhashaAI Backend - API v1 Router
+
+Main router that aggregates all API v1 endpoints.
+"""
+
+from fastapi import APIRouter
+
+from app.api.v1.auth import router as auth_router
+from app.api.v1.health import router as health_router
+
+# Create main v1 router
+api_v1_router = APIRouter()
+
+# Include sub-routers
+api_v1_router.include_router(
+    health_router,
+    prefix="/health",
+    tags=["Health"],
+)
+
+api_v1_router.include_router(
+    auth_router,
+    tags=["Authentication"],
+)
+
+# Placeholder routers for future implementation
+# These will be added as modules are developed:
+#
+# api_v1_router.include_router(papers_router, prefix="/question-papers", tags=["Question Papers"])
+# api_v1_router.include_router(assignments_router, prefix="/assignments", tags=["Assignments"])
+# api_v1_router.include_router(help_router, prefix="/help-sessions", tags=["Help Sessions"])
+# api_v1_router.include_router(tools_router, prefix="/teaching-tools", tags=["Teaching Tools"])
+# api_v1_router.include_router(checking_router, prefix="/paper-checking", tags=["Paper Checking"])
+# api_v1_router.include_router(learning_router, prefix="/learning", tags=["Learning"])
+# api_v1_router.include_router(audio_router, prefix="/audio", tags=["Audio"])
