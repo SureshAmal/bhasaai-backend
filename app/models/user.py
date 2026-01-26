@@ -23,6 +23,7 @@ from app.models.base import Base
 from app.models.enums import LanguagePreference
 
 if TYPE_CHECKING:
+    from app.models.assignment import Assignment
     from app.models.document import Document
     from app.models.institution import Institution
     from app.models.role import Role

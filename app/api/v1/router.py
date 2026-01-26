@@ -10,6 +10,7 @@ from app.api.v1.auth import router as auth_router
 from app.api.v1.documents import router as documents_router
 from app.api.v1.health import router as health_router
 from app.api.v1.question_papers import router as papers_router
+from app.api.v1.assignments import router as assignments_router
 
 # Create main v1 router
 api_v1_router = APIRouter()
@@ -36,8 +37,12 @@ api_v1_router.include_router(
     tags=["Question Papers"],
 )
 
+api_v1_router.include_router(
+    assignments_router,
+    tags=["Assignments"],
+)
+
 # Placeholder routers for future implementation:
-# api_v1_router.include_router(assignments_router, prefix="/assignments", tags=["Assignments"])
 # api_v1_router.include_router(help_router, prefix="/help-sessions", tags=["Help Sessions"])
 # api_v1_router.include_router(tools_router, prefix="/teaching-tools", tags=["Teaching Tools"])
 # api_v1_router.include_router(checking_router, prefix="/paper-checking", tags=["Paper Checking"])

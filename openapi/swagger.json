@@ -914,6 +914,227 @@
           }
         }
       }
+    },
+    "/api/v1/assignments/submit": {
+      "post": {
+        "tags": [
+          "Assignments",
+          "Assignments"
+        ],
+        "summary": "Submit Assignment",
+        "description": "Submit a question for solution or help.",
+        "operationId": "submit_assignment_api_v1_assignments_submit_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignmentSubmit"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/assignments": {
+      "get": {
+        "tags": [
+          "Assignments",
+          "Assignments"
+        ],
+        "summary": "List Assignments",
+        "description": "List user's assignments.",
+        "operationId": "list_assignments_api_v1_assignments_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Per Page"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/assignments/{assignment_id}": {
+      "get": {
+        "tags": [
+          "Assignments",
+          "Assignments"
+        ],
+        "summary": "Get Assignment Details",
+        "description": "Get assignment details including solution/help session.",
+        "operationId": "get_assignment_api_v1_assignments__assignment_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "assignment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Assignment Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/assignments/{assignment_id}/hint": {
+      "post": {
+        "tags": [
+          "Assignments",
+          "Assignments"
+        ],
+        "summary": "Get Next Hint",
+        "description": "Get next hint for a help session.\nOnly valid if assignment mode is 'help'.",
+        "operationId": "get_hint_api_v1_assignments__assignment_id__hint_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "assignment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Assignment Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HintRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1264,6 +1485,77 @@
           "success"
         ],
         "title": "APIResponse[dict[str, Any]]"
+      },
+      "AssignmentMode": {
+        "type": "string",
+        "enum": [
+          "solve",
+          "help"
+        ],
+        "title": "AssignmentMode",
+        "description": "Assignment solving mode."
+      },
+      "AssignmentSubmit": {
+        "properties": {
+          "input_type": {
+            "$ref": "#/components/schemas/InputType",
+            "default": "text"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject"
+          },
+          "grade_level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade Level"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/AssignmentMode",
+            "default": "solve"
+          },
+          "language": {
+            "type": "string",
+            "pattern": "^(gu|en|gu-en)$",
+            "title": "Language",
+            "default": "gu"
+          },
+          "question_text": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Question Text"
+          },
+          "question_image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Question Image Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "question_text"
+        ],
+        "title": "AssignmentSubmit",
+        "description": "Schema for submitting an assignment."
       },
       "AuthResponse": {
         "properties": {
@@ -1738,6 +2030,39 @@
         ],
         "title": "HealthResponse",
         "description": "Health check response schema.\n\nAttributes:\n    status: Service status (healthy, degraded, unhealthy)\n    version: Application version\n    environment: Current environment\n    services: Status of dependent services"
+      },
+      "HintRequest": {
+        "properties": {
+          "student_response": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Student Response"
+          },
+          "request_next_level": {
+            "type": "boolean",
+            "title": "Request Next Level",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "HintRequest",
+        "description": "Request for next hint in help mode."
+      },
+      "InputType": {
+        "type": "string",
+        "enum": [
+          "text",
+          "image",
+          "pdf"
+        ],
+        "title": "InputType",
+        "description": "Assignment input types."
       },
       "InstitutionBrief": {
         "properties": {

@@ -27,3 +27,10 @@ async def client() -> AsyncGenerator[AsyncClient, None]:
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
+
+
+@pytest.fixture
+async def get_db_session():
+    """Create database session for service tests."""
+    from app.api.deps import get_db
+    return get_db()

@@ -39,6 +39,7 @@ from app.models.user import User
 from app.models.user_session import UserSession
 from app.models.document import Document
 from app.models.question_paper import QuestionPaper, Question
+from app.models.assignment import Assignment, AssignmentSolution, HelpSession
 
 __all__ = [
     # Base
@@ -82,4 +83,8 @@ __all__ = [
     "Document",
     "QuestionPaper",
     "Question",
+    # Phase 4 Models
+    "Assignment",
+    "AssignmentSolution",
+    "HelpSession",
 ]

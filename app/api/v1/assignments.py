@@ -1,0 +1,156 @@
+"""
+BhashaAI Backend - Assignments API
+
+Endpoints for assignment submission and interaction.
+"""
+
+from uuid import UUID
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.deps import get_current_user, get_db
+from app.models import User
+from app.schemas.assignment import (
+    AssignmentListResponse,
+    AssignmentResponse,
+    AssignmentSubmit,
+    HintRequest,
+    HintResponse,
+)
+from app.schemas.response import APIResponse
+from app.services.assignment_service import AssignmentService
+
+router = APIRouter(prefix="/assignments", tags=["Assignments"])
+
+
+@router.post(
+    "/submit",
+    response_model=APIResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Submit Assignment",
+    description="Submit a question for solution or help.",
+)
+async def submit_assignment(
+    data: AssignmentSubmit,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Submit an assignment question.
+    
+    - **mode**: 'solve' for AI solution, 'help' for Socratic hints
+    - **input_type**: text (others to follow)
+    """
+    service = AssignmentService(db)
+    assignment = await service.create_assignment(
+        user_id=UUID(str(current_user.id)),
+        data=data
+    )
+    
+    # Reload with relations
+    assignment = await service.get_assignment(assignment.id, current_user.id)
+    
+    return APIResponse(
+        success=True,
+        message="Assignment submitted successfully",
+        data=AssignmentResponse.from_orm_with_details(assignment)
+    )
+
+
+@router.get(
+    "",
+    response_model=APIResponse,
+    summary="List Assignments",
+)
+async def list_assignments(
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=100),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """List user's assignments."""
+    service = AssignmentService(db)
+    assignments, total = await service.list_assignments(
+        user_id=UUID(str(current_user.id)),
+        page=page,
+        per_page=per_page
+    )
+    
+    return APIResponse(
+        success=True,
+        data=AssignmentListResponse(
+            assignments=[
+                AssignmentResponse.from_orm_with_details(a) 
+                for a in assignments
+            ],
+            total=total,
+            page=page,
+            per_page=per_page,
+            pages=(total + per_page - 1) // per_page if per_page > 0 else 0
+        )
+    )
+
+
+@router.get(
+    "/{assignment_id}",
+    response_model=APIResponse,
+    summary="Get Assignment Details",
+)
+async def get_assignment(
+    assignment_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get assignment details including solution/help session."""
+    service = AssignmentService(db)
+    assignment = await service.get_assignment(assignment_id, UUID(str(current_user.id)))
+    
+    if not assignment:
+        raise HTTPException(status_code=404, detail="Assignment not found")
+        
+    return APIResponse(
+        success=True,
+        data=AssignmentResponse.from_orm_with_details(assignment)
+    )
+
+
+@router.post(
+    "/{assignment_id}/hint",
+    response_model=APIResponse,
+    summary="Get Next Hint",
+)
+async def get_hint(
+    assignment_id: UUID,
+    data: HintRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Get next hint for a help session.
+    Only valid if assignment mode is 'help'.
+    """
+    service = AssignmentService(db)
+    assignment = await service.get_assignment(assignment_id, UUID(str(current_user.id)))
+    
+    if not assignment:
+        raise HTTPException(status_code=404, detail="Assignment not found")
+        
+    if not assignment.help_session:
+        raise HTTPException(status_code=400, detail="No active help session for this assignment")
+        
+    hint_data = await service.generate_hint(
+        session=assignment.help_session,
+        assignment=assignment,
+        student_response=data.student_response,
+        request_next_level=data.request_next_level
+    )
+    
+    return APIResponse(
+        success=True,
+        data=HintResponse(
+            hint=hint_data.get("hint", ""),
+            hint_level=hint_data.get("level", 0),
+            is_completed=hint_data.get("is_complete", False),
+            explanation=hint_data.get("explanation")
+        )
+    )
