@@ -23,6 +23,7 @@ from app.models.base import Base
 from app.models.enums import LanguagePreference
 
 if TYPE_CHECKING:
+    from app.models.document import Document
     from app.models.institution import Institution
     from app.models.role import Role
     from app.models.user_session import UserSession
@@ -177,6 +178,12 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan",
         lazy="selectin"
+    )
+    documents: Mapped[List["Document"]] = relationship(
+        "Document",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="noload"
     )
     
     # Indexes

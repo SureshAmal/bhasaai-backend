@@ -14,8 +14,10 @@ from app.models.enums import (
     BloomLevel,
     CheckedPaperStatus,
     DifficultyLevel,
+    DocumentStatus,
     ExportFormat,
     FileFormat,
+    FileType,
     GameType,
     InputType,
     InstitutionType,
@@ -35,6 +37,8 @@ from app.models.institution import Institution
 from app.models.role import Role
 from app.models.user import User
 from app.models.user_session import UserSession
+from app.models.document import Document
+from app.models.question_paper import QuestionPaper, Question
 
 __all__ = [
     # Base
@@ -47,6 +51,8 @@ __all__ = [
     "SubscriptionPlan",
     "LanguagePreference",
     "ProcessingStatus",
+    "DocumentStatus",
+    "FileType",
     "PaperStatus",
     "QuestionType",
     "DifficultyLevel",
@@ -72,4 +78,8 @@ __all__ = [
     "Role",
     "User",
     "UserSession",
+    # Phase 3 Models
+    "Document",
+    "QuestionPaper",
+    "Question",
 ]

@@ -55,10 +55,12 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     
     # AI/LLM
+    llm_provider: str = "cerebras"  # cerebras, google, openai, groq
     cerebras_api_key: str = ""
     openai_api_key: str = ""
     google_api_key: str = ""
-    llm_model: str = "gpt-4-turbo-preview"
+    groq_api_key: str = ""
+    llm_model: str = "llama-3.3-70b"  # Default Cerebras model
     embedding_model: str = "text-embedding-3-small"
     
     # MinIO/S3

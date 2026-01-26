@@ -38,6 +38,22 @@ class ProcessingStatus(str, enum.Enum):
     FAILED = "failed"
 
 
+class DocumentStatus(str, enum.Enum):
+    """Status for document processing."""
+    PENDING = "pending"
+    PROCESSING = "processing"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
+class FileType(str, enum.Enum):
+    """Uploaded file types."""
+    PDF = "pdf"
+    DOCX = "docx"
+    TXT = "txt"
+    IMAGE = "image"
+
+
 class PaperStatus(str, enum.Enum):
     """Question paper status."""
     DRAFT = "draft"
