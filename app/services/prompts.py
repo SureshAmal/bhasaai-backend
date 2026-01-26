@@ -186,3 +186,82 @@ Return ONLY valid JSON:
     "explanation": "Why this hint (internal use)"
 }}"""
 )
+
+
+# --- TEACHING TOOL PROMPTS ---
+
+# MIND MAP PROMPT
+MIND_MAP_PROMPT = PromptTemplate(
+    input_variables=["topic", "subject", "grade_level", "language_instruction"],
+    template="""Create a hierarchical Mind Map for the topic: {topic}.
+Subject: {subject}
+Grade: {grade_level}
+
+{language_instruction}
+
+Return a valid JSON object with this recursive structure:
+{{
+    "id": "root",
+    "label": "{topic}",
+    "children": [
+        {{
+            "id": "1",
+            "label": "Subtopic A",
+            "children": [ ... ]
+        }},
+        ...
+    ]
+}}
+
+Keep labels concise (1-3 words preferred). Max depth 3 levels.
+Return ONLY the JSON."""
+)
+
+
+# LESSON PLAN PROMPT
+LESSON_PLAN_PROMPT = PromptTemplate(
+    input_variables=["topic", "subject", "grade_level", "duration", "language_instruction"],
+    template="""Create a structured Lesson Plan for: {topic}.
+Subject: {subject}
+Grade: {grade_level}
+Duration: {duration}
+
+{language_instruction}
+
+Return valid JSON:
+{{
+    "topic": "{topic}",
+    "duration": "{duration}",
+    "objectives": ["Obj 1", "Obj 2"],
+    "materials_needed": ["Item 1", "Item 2"],
+    "timeline": [
+        {{"time": "0-5 min", "activity": "Introduction", "description": "..."}},
+        {{"time": "5-15 min", "activity": "Core Concept", "description": "..."}},
+        ...
+    ],
+    "homework": "Assignment description"
+}}
+Return ONLY the JSON."""
+)
+
+
+# ANALOGY PROMPT
+ANALOGY_PROMPT = PromptTemplate(
+    input_variables=["topic", "subject", "grade_level", "language_instruction"],
+    template="""Explain the concept '{topic}' using a simple, real-world analogy appropriate for Grade {grade_level}.
+Subject: {subject}
+
+{language_instruction}
+
+Return valid JSON:
+{{
+    "concept": "{topic}",
+    "analogy_story": "The main story/scenario of the analogy...",
+    "comparison_points": [
+        {{"concept_part": "Nucleus", "analogy_part": "Brain/Control Center", "explanation": "Both control operations..."}},
+        ...
+    ],
+    "takeaway": "One sentence summary"
+}}
+Return ONLY the JSON."""
+)

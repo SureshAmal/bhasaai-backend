@@ -1135,6 +1135,183 @@
           }
         }
       }
+    },
+    "/api/v1/teaching-tools/generate": {
+      "post": {
+        "tags": [
+          "Teaching Tools",
+          "Teaching Tools"
+        ],
+        "summary": "Generate Teaching Tool",
+        "description": "Generate a Mind Map, Lesson Plan, or Analogy.",
+        "operationId": "generate_tool_api_v1_teaching_tools_generate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ToolGenerateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/teaching-tools": {
+      "get": {
+        "tags": [
+          "Teaching Tools",
+          "Teaching Tools"
+        ],
+        "summary": "List Teaching Tools",
+        "description": "List generated tools.",
+        "operationId": "list_tools_api_v1_teaching_tools_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ToolType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Type"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Per Page"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/teaching-tools/{tool_id}": {
+      "get": {
+        "tags": [
+          "Teaching Tools",
+          "Teaching Tools"
+        ],
+        "summary": "Get Tool Details",
+        "description": "Get specific teaching tool.",
+        "operationId": "get_tool_api_v1_teaching_tools__tool_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "tool_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Tool Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2699,6 +2876,75 @@
         ],
         "title": "TokenResponse",
         "description": "Token response after successful authentication.\n\nAttributes:\n    access_token: JWT access token (short-lived)\n    refresh_token: JWT refresh token (long-lived)\n    token_type: Always \"bearer\"\n    expires_in: Access token TTL in seconds"
+      },
+      "ToolGenerateRequest": {
+        "properties": {
+          "tool_type": {
+            "$ref": "#/components/schemas/ToolType"
+          },
+          "topic": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Topic"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject"
+          },
+          "grade_level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade Level"
+          },
+          "language": {
+            "type": "string",
+            "pattern": "^(gu|en|gu-en)$",
+            "title": "Language",
+            "default": "en"
+          },
+          "additional_instructions": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Additional Instructions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tool_type",
+          "topic"
+        ],
+        "title": "ToolGenerateRequest",
+        "description": "Request to generate a teaching tool."
+      },
+      "ToolType": {
+        "type": "string",
+        "enum": [
+          "mind_map",
+          "lesson_plan",
+          "analogy"
+        ],
+        "title": "ToolType",
+        "description": "Types of teaching tools."
       },
       "UserCreate": {
         "properties": {

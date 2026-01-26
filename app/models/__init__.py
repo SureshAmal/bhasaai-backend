@@ -40,6 +40,7 @@ from app.models.user_session import UserSession
 from app.models.document import Document
 from app.models.question_paper import QuestionPaper, Question
 from app.models.assignment import Assignment, AssignmentSolution, HelpSession
+from app.models.teaching_tool import TeachingTool, ToolType
 
 __all__ = [
     # Base
@@ -87,4 +88,7 @@ __all__ = [
     "Assignment",
     "AssignmentSolution",
     "HelpSession",
+    # Phase 5 Models
+    "TeachingTool",
+    "ToolType",
 ]
