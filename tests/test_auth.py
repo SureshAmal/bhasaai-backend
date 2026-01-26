@@ -6,13 +6,10 @@ Tests for authentication endpoints.
 
 import pytest
 from httpx import AsyncClient, ASGITransport
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
 from app.config import settings
-from app.db.session import get_db
 from app.main import app
-from app.models import Base, Role
 
 
 # Test database URL - use same as main but could be different for isolation

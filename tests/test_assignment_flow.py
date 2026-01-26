@@ -6,11 +6,11 @@ by mocking the LLM service to verify application logic.
 """
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, patch, PropertyMock
 from uuid import uuid4
 
 from app.services.assignment_service import AssignmentService
-from app.schemas.assignment import AssignmentSubmit, HintRequest
+from app.schemas.assignment import AssignmentSubmit
 from app.models.enums import AssignmentMode, ProcessingStatus
 
 # Mock data

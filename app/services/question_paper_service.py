@@ -5,14 +5,13 @@ Handles question paper generation and management.
 """
 
 import logging
-from typing import Any, Optional
+from typing import Optional
 from uuid import UUID
 
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import (
-    Document,
     Question,
     QuestionPaper,
     PaperStatus,
@@ -21,11 +20,10 @@ from app.models import (
 )
 from app.schemas.question_paper import (
     GeneratePaperRequest,
-    QuestionPaperCreate,
     QuestionPaperUpdate,
 )
 from app.services.document_service import DocumentService
-from app.services.llm_service import get_llm_service, LLMProvider
+from app.services.llm_service import get_llm_service
 
 logger = logging.getLogger(__name__)
 

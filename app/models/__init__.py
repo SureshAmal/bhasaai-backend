@@ -41,6 +41,12 @@ from app.models.document import Document
 from app.models.question_paper import QuestionPaper, Question
 from app.models.assignment import Assignment, AssignmentSolution, HelpSession
 from app.models.teaching_tool import TeachingTool, ToolType
+from app.models.paper_checking import (
+    AnswerKey,
+    Submission,
+    SubmissionStatus,
+    GradedAnswer,
+)
 
 __all__ = [
     # Base
@@ -91,4 +97,9 @@ __all__ = [
     # Phase 5 Models
     "TeachingTool",
     "ToolType",
+    # Phase 6 Models
+    "AnswerKey",
+    "Submission",
+    "SubmissionStatus",
+    "GradedAnswer",
 ]

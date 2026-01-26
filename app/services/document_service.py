@@ -6,7 +6,7 @@ Handles document upload, text extraction, and processing.
 
 import logging
 from io import BytesIO
-from typing import Any, Optional
+from typing import Optional
 from uuid import UUID
 
 from sqlalchemy import select
@@ -14,7 +14,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.storage import get_storage_service
 from app.models import Document, DocumentStatus, FileType
-from app.schemas.document import DocumentCreate
 
 logger = logging.getLogger(__name__)
 

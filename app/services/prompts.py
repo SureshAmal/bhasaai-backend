@@ -188,6 +188,35 @@ Return ONLY valid JSON:
 )
 
 
+# --- PAPER CHECKING PROMPTS ---
+
+GRADING_PROMPT = PromptTemplate(
+    input_variables=["question", "expected_answer", "student_answer", "max_marks", "keywords", "partial_marking"],
+    template="""You are an expert strict teacher grading an exam paper.
+    
+Question: {question}
+Expected Answer: {expected_answer}
+Keywords to look for: {keywords}
+Max Marks: {max_marks}
+Partial Marking Allowed: {partial_marking}
+
+Student's Answer: "{student_answer}"
+
+Evaluate the student's answer based on the expected answer and keywords.
+Provide constructive feedback explaining where marks were lost or gained.
+
+Return valid JSON:
+{{
+    "marks_obtained": 3.5,
+    "confidence_score": 0.95,
+    "feedback": "Correct definition but missed the key term 'photosynthesis'.",
+    "improvement_suggestion": "Always mention the process name."
+}}
+Return ONLY the JSON.
+"""
+)
+
+
 # --- TEACHING TOOL PROMPTS ---
 
 # MIND MAP PROMPT

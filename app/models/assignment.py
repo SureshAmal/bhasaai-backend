@@ -26,7 +26,6 @@ from app.models.enums import (
     AssignmentMode,
     DifficultyLevel,
     InputType,
-    InteractionType,
     ProcessingStatus,
 )
 

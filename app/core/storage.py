@@ -5,8 +5,7 @@ Handles file upload/download to MinIO S3-compatible storage.
 """
 
 import logging
-from io import BytesIO
-from typing import BinaryIO, Optional,Any
+from typing import BinaryIO, Optional
 from uuid import uuid4
 
 from minio import Minio

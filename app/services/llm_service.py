@@ -7,12 +7,10 @@ Supports Cerebras, Google Gemini, OpenAI, and more.
 
 import json
 import logging
-from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Any, Optional
 
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.messages import HumanMessage
 
 from app.config import settings
 from app.services.prompts import (

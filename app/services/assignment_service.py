@@ -18,11 +18,10 @@ from app.models import (
     AssignmentSolution,
     HelpSession,
     AssignmentMode,
-    InputType,
     ProcessingStatus,
     DifficultyLevel,
 )
-from app.schemas.assignment import AssignmentSubmit, HintRequest
+from app.schemas.assignment import AssignmentSubmit
 from app.services.llm_service import get_llm_service
 from app.services.prompts import (
     SOLUTION_GENERATION_PROMPT,

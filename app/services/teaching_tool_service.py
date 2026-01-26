@@ -6,7 +6,7 @@ Generates educational content like mind maps, lesson plans, and analogies.
 
 import json
 import logging
-from typing import Any, Optional
+from typing import Optional
 from uuid import UUID
 
 from sqlalchemy import select

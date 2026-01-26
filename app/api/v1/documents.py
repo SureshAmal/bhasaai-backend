@@ -12,7 +12,6 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, s
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db
-from app.core.storage import get_storage_service
 from app.models import User
 from app.schemas.document import (
     DocumentListResponse,

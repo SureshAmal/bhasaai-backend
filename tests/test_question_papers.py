@@ -6,7 +6,6 @@ Tests for document upload and question paper generation endpoints.
 
 import pytest
 from httpx import AsyncClient, ASGITransport
-from io import BytesIO
 
 from app.main import app
 

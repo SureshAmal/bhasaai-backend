@@ -12,6 +12,7 @@ from app.api.v1.health import router as health_router
 from app.api.v1.question_papers import router as papers_router
 from app.api.v1.assignments import router as assignments_router
 from app.api.v1.teaching_tools import router as tools_router
+from app.api.v1.paper_checking import router as checking_router
 
 # Create main v1 router
 api_v1_router = APIRouter()
@@ -48,9 +49,13 @@ api_v1_router.include_router(
     tags=["Teaching Tools"],
 )
 
+api_v1_router.include_router(
+    checking_router,
+    tags=["Paper Checking"],
+)
+
 # Placeholder routers for future implementation:
 # api_v1_router.include_router(help_router, prefix="/help-sessions", tags=["Help Sessions"])
-# api_v1_router.include_router(checking_router, prefix="/paper-checking", tags=["Paper Checking"])
 # api_v1_router.include_router(learning_router, prefix="/learning", tags=["Learning"])
 # api_v1_router.include_router(audio_router, prefix="/audio", tags=["Audio"])
 

@@ -5,7 +5,7 @@ SQLAlchemy model for the users table.
 """
 
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy import (
     Boolean,
@@ -23,7 +23,6 @@ from app.models.base import Base
 from app.models.enums import LanguagePreference
 
 if TYPE_CHECKING:
-    from app.models.assignment import Assignment
     from app.models.document import Document
     from app.models.institution import Institution
     from app.models.role import Role

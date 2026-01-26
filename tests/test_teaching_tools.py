@@ -6,7 +6,7 @@ Tests for generating and listing teaching tools.
 
 import json
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, patch, PropertyMock
 from uuid import uuid4
 from langchain_core.runnables import Runnable
 from langchain_core.messages import AIMessage
