@@ -25,7 +25,7 @@ from app.models.paper_checking import (
 from app.schemas.paper_checking import AnswerKeyCreate
 from app.services.ocr_service import OCRService
 from app.services.llm_service import get_llm_service
-from app.services.prompts import GRADING_PROMPT
+from app.services.prompts import GRADING_PROMPT, LANGUAGE_INSTRUCTIONS
 
 logger = logging.getLogger(__name__)
 
@@ -110,6 +110,16 @@ class CheckingService:
             submission.status = SubmissionStatus.GRADING
             await self.db.commit()
             
+            # Fetch Question Paper to get language preference
+            paper_lang = "gu" # Default
+            if submission.question_paper_id:
+                from app.models.question_paper import QuestionPaper
+                qp_stmt = select(QuestionPaper).where(QuestionPaper.id == submission.question_paper_id)
+                qp_res = await self.db.execute(qp_stmt)
+                qp = qp_res.scalar_one_or_none()
+                if qp and qp.language:
+                    paper_lang = qp.language
+
             # Fetch Answer Key if available
             answer_key_map = {}
             if submission.question_paper_id:
@@ -137,7 +147,8 @@ class CheckingService:
                 graded = await self._grade_single_answer(
                     question_text=segment["label"], # or mapped question text
                     student_answer=segment["text"],
-                    criteria=criteria
+                    criteria=criteria,
+                    language=paper_lang
                 )
                 
                 # Save GradedAnswer
@@ -185,7 +196,7 @@ class CheckingService:
             return key_map.get(q_num, {})
         return {}
         
-    async def _grade_single_answer(self, question_text: str, student_answer: str, criteria: dict) -> dict:
+    async def _grade_single_answer(self, question_text: str, student_answer: str, criteria: dict, language: str = "gu") -> dict:
         """Use LLM to grade answer."""
         
         expected = criteria.get("expected_answer", "N/A (General Evaluation)")
@@ -202,7 +213,8 @@ class CheckingService:
                 "student_answer": student_answer,
                 "max_marks": max_marks,
                 "keywords": ", ".join(keywords),
-                "partial_marking": str(partial)
+                "partial_marking": str(partial),
+                "language_instruction": LANGUAGE_INSTRUCTIONS.get(language, LANGUAGE_INSTRUCTIONS["gu"])
             })
             
             content = response.content.strip()

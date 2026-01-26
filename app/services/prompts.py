@@ -73,7 +73,7 @@ Return ONLY a JSON array of topic strings, e.g. ["Topic 1", "Topic 2"]"""
 
 # Language Instructions
 LANGUAGE_INSTRUCTIONS = {
-    "gu": "6. Output MUST be in Gujarati (ગુજરાતી). Include English translation in question_text field.",
+    "gu": "6. Output MUST be in Gujarati (ગુજરાતી) script. All explanations, answers, and feedback must be in Gujarati. English terms can be included in brackets if technical.",
     "en": "6. Output MUST be in English only.",
     "gu-en": "6. Output should be bilingual - provide both English and Gujarati versions.",
 }
@@ -191,7 +191,7 @@ Return ONLY valid JSON:
 # --- PAPER CHECKING PROMPTS ---
 
 GRADING_PROMPT = PromptTemplate(
-    input_variables=["question", "expected_answer", "student_answer", "max_marks", "keywords", "partial_marking"],
+    input_variables=["question", "expected_answer", "student_answer", "max_marks", "keywords", "partial_marking", "language_instruction"],
     template="""You are an expert strict teacher grading an exam paper.
     
 Question: {question}
@@ -204,6 +204,8 @@ Student's Answer: "{student_answer}"
 
 Evaluate the student's answer based on the expected answer and keywords.
 Provide constructive feedback explaining where marks were lost or gained.
+
+{language_instruction}
 
 Return valid JSON:
 {{
