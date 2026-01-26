@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     from app.models.institution import Institution
     from app.models.role import Role
     from app.models.user_session import UserSession
+    from app.models.learning import LearningProfile
 
 
 class User(Base):
@@ -193,6 +194,13 @@ class User(Base):
         Index("idx_users_active", "is_active"),
     )
     
+    learning_profile: Mapped[Optional["LearningProfile"]] = relationship(
+        "LearningProfile",
+        back_populates="user",
+        uselist=False,
+        lazy="selectin"
+    )
+
     def has_permission(self, permission: str) -> bool:
         """
         Check if user has a specific permission via their role.

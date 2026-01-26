@@ -47,6 +47,15 @@ from app.models.paper_checking import (
     SubmissionStatus,
     GradedAnswer,
 )
+from app.models.learning import (
+    LearningProfile,
+    VocabularyItem,
+    UserWordProgress,
+    GrammarTopic,
+    Exercise,
+    LearningDifficulty,
+    ExerciseType,
+)
 
 __all__ = [
     # Base
@@ -102,4 +111,12 @@ __all__ = [
     "Submission",
     "SubmissionStatus",
     "GradedAnswer",
+    # Phase 7 Models
+    "LearningProfile",
+    "VocabularyItem",
+    "UserWordProgress",
+    "GrammarTopic",
+    "Exercise",
+    "DifficultyLevel",
+    "ExerciseType",
 ]

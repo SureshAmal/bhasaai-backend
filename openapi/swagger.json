@@ -1458,6 +1458,192 @@
           }
         }
       }
+    },
+    "/api/v1/learning/profile": {
+      "get": {
+        "tags": [
+          "Learning",
+          "Learning"
+        ],
+        "summary": "Get User Profile",
+        "description": "Get current user's learning stats and gamification profile.",
+        "operationId": "get_profile_api_v1_learning_profile_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse_LearningProfileResponse_"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/learning/vocabulary/daily": {
+      "get": {
+        "tags": [
+          "Learning",
+          "Learning"
+        ],
+        "summary": "Get Daily Vocabulary",
+        "description": "Get today's vocabulary lesson.\nReturns a mix of 'review' items (due today) and 'new' items.",
+        "operationId": "get_daily_vocabulary_api_v1_learning_vocabulary_daily_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse_List_VocabularyLessonItem__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/learning/vocabulary/{word_id}/progress": {
+      "post": {
+        "tags": [
+          "Learning",
+          "Learning"
+        ],
+        "summary": "Submit Word Progress",
+        "description": "Submit result of a vocabulary review (0-5 rating).\nUpdates scheduling using SM-2 algorithm.",
+        "operationId": "submit_progress_api_v1_learning_vocabulary__word_id__progress_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "word_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Word Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VocabularyProgressSubmit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse_ProgressResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/learning/audio/tts": {
+      "post": {
+        "tags": [
+          "Learning",
+          "Learning"
+        ],
+        "summary": "Generate Audio (TTS)",
+        "description": "Generate audio URL for given text (Gujarati/English).",
+        "operationId": "generate_audio_api_v1_learning_audio_tts_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TTSRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse_dict_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -1608,6 +1794,157 @@
           "success"
         ],
         "title": "APIResponse[HealthResponse]"
+      },
+      "APIResponse_LearningProfileResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether the operation was successful"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LearningProfileResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Response data payload"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message",
+            "description": "Human-readable message (English)"
+          },
+          "message_gu": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message Gu",
+            "description": "Human-readable message (Gujarati / ગુજરાતી)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success"
+        ],
+        "title": "APIResponse[LearningProfileResponse]"
+      },
+      "APIResponse_List_VocabularyLessonItem__": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether the operation was successful"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/VocabularyLessonItem"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data",
+            "description": "Response data payload"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message",
+            "description": "Human-readable message (English)"
+          },
+          "message_gu": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message Gu",
+            "description": "Human-readable message (Gujarati / ગુજરાતી)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success"
+        ],
+        "title": "APIResponse[List[VocabularyLessonItem]]"
+      },
+      "APIResponse_ProgressResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether the operation was successful"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProgressResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Response data payload"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message",
+            "description": "Human-readable message (English)"
+          },
+          "message_gu": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message Gu",
+            "description": "Human-readable message (Gujarati / ગુજરાતી)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success"
+        ],
+        "title": "APIResponse[ProgressResponse]"
       },
       "APIResponse_TokenResponse_": {
         "properties": {
@@ -2530,6 +2867,82 @@
         "title": "LanguagePreference",
         "description": "User language preference for AI responses."
       },
+      "LearningProfileResponse": {
+        "properties": {
+          "total_xp": {
+            "type": "integer",
+            "title": "Total Xp"
+          },
+          "streak_days": {
+            "type": "integer",
+            "title": "Streak Days"
+          },
+          "current_level": {
+            "type": "string",
+            "title": "Current Level"
+          },
+          "vocabulary_mastered": {
+            "type": "integer",
+            "title": "Vocabulary Mastered"
+          },
+          "grammar_concepts_completed": {
+            "type": "integer",
+            "title": "Grammar Concepts Completed"
+          },
+          "last_activity_date": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Last Activity Date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_xp",
+          "streak_days",
+          "current_level",
+          "vocabulary_mastered",
+          "grammar_concepts_completed",
+          "last_activity_date"
+        ],
+        "title": "LearningProfileResponse",
+        "description": "User learning profile statistics."
+      },
+      "ProgressResponse": {
+        "properties": {
+          "vocabulary_item_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Vocabulary Item Id"
+          },
+          "next_review_date": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Next Review Date"
+          },
+          "interval_days": {
+            "type": "number",
+            "title": "Interval Days"
+          },
+          "is_mastered": {
+            "type": "boolean",
+            "title": "Is Mastered"
+          },
+          "xp_gained": {
+            "type": "integer",
+            "title": "Xp Gained",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "vocabulary_item_id",
+          "next_review_date",
+          "interval_days",
+          "is_mastered"
+        ],
+        "title": "ProgressResponse",
+        "description": "Scheduling result after submission."
+      },
       "QuestionPaperResponse": {
         "properties": {
           "title": {
@@ -3075,6 +3488,25 @@
         "title": "RoleResponse",
         "description": "Role information in responses."
       },
+      "TTSRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "language": {
+            "type": "string",
+            "title": "Language",
+            "default": "gu"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "TTSRequest",
+        "description": "Request for Text-to-Speech generation."
+      },
       "TokenRefresh": {
         "properties": {
           "refresh_token": {
@@ -3467,6 +3899,133 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "VocabularyItemResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "gujarati_word": {
+            "type": "string",
+            "title": "Gujarati Word"
+          },
+          "english_translation": {
+            "type": "string",
+            "title": "English Translation"
+          },
+          "transliteration": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transliteration"
+          },
+          "difficulty_level": {
+            "type": "integer",
+            "title": "Difficulty Level"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Url"
+          },
+          "audio_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Audio Url"
+          },
+          "example_sentence": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Example Sentence"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "gujarati_word",
+          "english_translation",
+          "difficulty_level",
+          "category"
+        ],
+        "title": "VocabularyItemResponse",
+        "description": "Vocabulary item details."
+      },
+      "VocabularyLessonItem": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "title": "Type",
+            "description": "'new' or 'review'"
+          },
+          "progress_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Progress Id"
+          },
+          "word": {
+            "$ref": "#/components/schemas/VocabularyItemResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "word"
+        ],
+        "title": "VocabularyLessonItem",
+        "description": "Item in a daily lesson."
+      },
+      "VocabularyProgressSubmit": {
+        "properties": {
+          "quality": {
+            "type": "integer",
+            "maximum": 5.0,
+            "minimum": 0.0,
+            "title": "Quality",
+            "description": "0=Forgot, 5=Perfect"
+          }
+        },
+        "type": "object",
+        "required": [
+          "quality"
+        ],
+        "title": "VocabularyProgressSubmit",
+        "description": "Submission of study result."
       }
     },
     "securitySchemes": {
