@@ -108,3 +108,34 @@ async def get_tool(
         success=True,
         data=TeachingToolResponse.from_orm(tool)
     )
+
+
+@router.delete(
+    "/{tool_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete Teaching Tool",
+    description="Delete a teaching tool (soft delete).",
+)
+async def delete_tool(
+    tool_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Delete a teaching tool."""
+    service = TeachingToolService(db)
+    deleted = await service.delete_tool(
+        tool_id=tool_id,
+        user_id=UUID(str(current_user.id)),
+    )
+    
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "success": False,
+                "message": "Teaching tool not found",
+                "message_gu": "ટીચિંગ ટૂલ મળ્યું નથી",
+            }
+        )
+    
+    return

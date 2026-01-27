@@ -43,6 +43,8 @@ from app.models.assignment import Assignment, AssignmentSolution, HelpSession
 from app.models.teaching_tool import TeachingTool, ToolType
 from app.models.paper_checking import (
     AnswerKey,
+    CheckedPaper,
+    CheckedPaperStatus as CheckedPaperStatusModel,
     Submission,
     SubmissionStatus,
     GradedAnswer,
@@ -109,6 +111,8 @@ __all__ = [
     "ToolType",
     # Phase 6 Models
     "AnswerKey",
+    "CheckedPaper",
+    "CheckedPaperStatusModel",
     "Submission",
     "SubmissionStatus",
     "GradedAnswer",

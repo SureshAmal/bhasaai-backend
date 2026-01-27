@@ -191,7 +191,8 @@ class QuestionPaper(Base):
         "Question",
         back_populates="paper",
         lazy="selectin",
-        order_by="Question.question_number"
+        order_by="Question.question_number",
+        cascade="all, delete-orphan"
     )
     
     # Indexes

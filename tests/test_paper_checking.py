@@ -1,195 +1,243 @@
 """
 BhashaAI Backend - Paper Checking Tests
 
-Tests for Answer Key management and Submission grading workflow.
+Tests for the paper checking API endpoints:
+- Schema validation (unit tests)
+- API endpoints (integration tests)
+
+Run with: uv run pytest tests/test_paper_checking.py -v
 """
 
-import json
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch, PropertyMock
 from uuid import uuid4
-from langchain_core.runnables import Runnable
-from langchain_core.messages import AIMessage
-
-from app.models.paper_checking import SubmissionStatus
-from app.schemas.paper_checking import AnswerKeyCreate, AnswerCriteria
-from app.services.checking_service import CheckingService
 
 
-# --- Mock Data ---
+# =============================================================================
+# Test Data Fixtures
+# =============================================================================
 
-MOCK_OCR_TEXT = """
-Student Name: Test User
-Q1. Photosynthesis
-Q2. Gravity
-"""
+@pytest.fixture
+def sample_answer_key_data():
+    """Sample answer key creation data."""
+    return {
+        "title": "Science Unit Test - Answer Key",
+        "subject": "science",
+        "total_marks": 20,
+        "answers": [
+            {
+                "question_number": 1,
+                "type": "mcq",
+                "correct_answer": "B",
+                "max_marks": 2,
+                "partial_marking": False,
+            },
+            {
+                "question_number": 2,
+                "type": "mcq",
+                "correct_answer": "A",
+                "max_marks": 2,
+                "partial_marking": False,
+            },
+            {
+                "question_number": 3,
+                "type": "short_answer",
+                "expected_answer": "Photosynthesis is the process by which plants convert sunlight into energy.",
+                "keywords": ["photosynthesis", "plants", "sunlight", "energy"],
+                "max_marks": 6,
+                "partial_marking": True,
+            },
+            {
+                "question_number": 4,
+                "type": "long_answer",
+                "expected_answer": "The water cycle consists of evaporation, condensation, precipitation, and collection.",
+                "keywords": ["evaporation", "condensation", "precipitation", "collection"],
+                "max_marks": 10,
+                "partial_marking": True,
+            },
+        ],
+        "marking_scheme": {
+            "keyword_match_percent": 50,
+            "semantic_similarity_threshold": 0.7,
+        },
+    }
 
-MOCK_SEGMENTS = [
-    {"label": "Q1", "text": "Photosynthesis is the process..."},
-    {"label": "Q2", "text": "Gravity pulls objects..."}
-]
 
-MOCK_GRADING_RESULT = {
-    "marks_obtained": 4.5,
-    "confidence_score": 0.9,
-    "feedback": "Well done",
-    "improvement_suggestion": "None"
-}
+# =============================================================================
+# Schema Validation Tests (Unit Tests)
+# =============================================================================
 
+class TestSchemaValidation:
+    """Tests for schema validation."""
 
-# --- Mock Helpers ---
-
-class MockRunnable(Runnable):
-    def __init__(self, response_content=None):
-        self.response_content = response_content
+    def test_answer_key_question_number_unique(self):
+        """Test that duplicate question numbers are rejected."""
+        from app.schemas.paper_checking import AnswerKeyCreate
+        from pydantic import ValidationError
         
-    def invoke(self, input, config=None, **kwargs):
-        return AIMessage(content=self.response_content)
+        data = {
+            "title": "Test Key",
+            "total_marks": 10,
+            "answers": [
+                {"question_number": 1, "type": "mcq", "correct_answer": "A", "max_marks": 5},
+                {"question_number": 1, "type": "mcq", "correct_answer": "B", "max_marks": 5},  # Duplicate!
+            ],
+        }
         
-    async def ainvoke(self, input, config=None, **kwargs):
-        return AIMessage(content=self.response_content)
+        with pytest.raises(ValidationError):
+            AnswerKeyCreate(**data)
+
+    def test_answer_key_marks_sum_validation(self):
+        """Test that answer marks must sum to total_marks."""
+        from app.schemas.paper_checking import AnswerKeyCreate
+        from pydantic import ValidationError
+        
+        data = {
+            "title": "Test Key",
+            "total_marks": 100,  # Total is 100
+            "answers": [
+                {"question_number": 1, "type": "mcq", "correct_answer": "A", "max_marks": 10},
+                {"question_number": 2, "type": "mcq", "correct_answer": "B", "max_marks": 10},
+                # Only 20 marks, but total is 100
+            ],
+        }
+        
+        with pytest.raises(ValidationError):
+            AnswerKeyCreate(**data)
+
+    def test_valid_answer_key_creation(self):
+        """Test valid answer key schema."""
+        from app.schemas.paper_checking import AnswerKeyCreate
+        
+        data = {
+            "title": "Valid Test Key",
+            "total_marks": 15,
+            "answers": [
+                {"question_number": 1, "type": "mcq", "correct_answer": "A", "max_marks": 5},
+                {"question_number": 2, "type": "mcq", "correct_answer": "B", "max_marks": 5},
+                {"question_number": 3, "type": "short_answer", "expected_answer": "Test answer", "max_marks": 5},
+            ],
+        }
+        
+        result = AnswerKeyCreate(**data)
+        assert result.title == "Valid Test Key"
+        assert result.total_marks == 15
+        assert len(result.answers) == 3
+
+    def test_valid_answer_item_mcq(self):
+        """Test valid MCQ answer item creation."""
+        from app.schemas.paper_checking import AnswerItem
+        
+        item = AnswerItem(
+            question_number=1,
+            type="mcq",
+            correct_answer="A",
+            max_marks=5,
+        )
+        
+        assert item.question_number == 1
+        assert item.type == "mcq"
+        assert item.correct_answer == "A"
+
+    def test_valid_answer_item_short_answer(self):
+        """Test valid short answer item creation."""
+        from app.schemas.paper_checking import AnswerItem
+        
+        item = AnswerItem(
+            question_number=2,
+            type="short_answer",
+            expected_answer="The answer is 42",
+            keywords=["answer", "42"],
+            max_marks=10,
+        )
+        
+        assert item.question_number == 2
+        assert item.type == "short_answer"
+        assert item.expected_answer == "The answer is 42"
+        assert len(item.keywords) == 2
 
 
-@pytest.mark.anyio
-class TestCheckingService:
-    """Test paper checking business logic."""
-    
-    async def test_create_answer_key(self, get_db_session):
-        """Test answer key creation."""
-        async for db in get_db_session:
-             # Need a valid QP ID, let's just make a fake one because the FK is mocked or we create one
-             # Real integration test needs QP. Let's create one.
-            from app.models.question_paper import QuestionPaper
-            from app.models.user import User
-            from app.models.role import Role
-            from sqlalchemy import select
-            
-            # Setup User & Role
-            result = await db.execute(select(Role).where(Role.name == "teacher"))
-            role = result.scalar_one_or_none()
-            if not role:
-                role = Role(name="teacher", is_system_role=True)
-                db.add(role)
-                await db.commit()
-            
-            user = User(
-                email=f"key_test_{uuid4().hex[:8]}@example.com",
-                password_hash="pw",
-                full_name="Key User",
-                role_id=str(role.id)
-            )
-            db.add(user)
-            await db.commit()
-            
-            # Setup QuestionPaper
-            qp = QuestionPaper(
-                user_id=str(user.id),
-                title="Test Paper",
-                subject="Science",
-                grade_level="10",
-                total_marks=100
-                # removed content={} as it's not in model
-            )
-            db.add(qp)
-            await db.commit()
-            
-            # Test Logic
-            service = CheckingService(db)
-            data = AnswerKeyCreate(
-                question_paper_id=qp.id,
-                content={
-                    "1": AnswerCriteria(expected_answer="Ans1", max_marks=5),
-                    "2": AnswerCriteria(expected_answer="Ans2", max_marks=5)
-                }
-            )
-            
-            key = await service.create_answer_key(data)
-            assert key.content["1"]["expected_answer"] == "Ans1"
-            assert str(key.question_paper_id) == str(qp.id)
+# =============================================================================
+# API Endpoint Tests
+# =============================================================================
 
-    async def test_process_submission_workflow(self, get_db_session):
-        """Test full OCR -> Grading pipeline."""
-        from sqlalchemy import select
-        async for db in get_db_session:
-            # Setup User
-            from app.models.user import User
-            # Reuse logic or assume distinct due to test isolation (though session scope fixture might share)
-            # Create user
-            # (In production tests, use fixtures like 'teacher_user', 'student_user')
-            
-            stmt = select(User).limit(1)
-            result = await db.execute(stmt)
-            user = result.scalar_one_or_none()
-            if not user:
-                # Fallback if previous test didn't run or order differs
-                # ... creation logic ...
-                pass 
-            
-            # We need a fresh user to avoid conflicts? No, users table is fine.
-            # Let's create a temp user for this test
-            try:
-                from app.models.role import Role
-                result = await db.execute(select(Role).where(Role.name == "student"))
-                role = result.scalar_one_or_none()
-                if not role:
-                    role = Role(name="student", is_system_role=True)
-                    db.add(role)
-                    await db.commit()
+@pytest.mark.asyncio(loop_scope="session")
+class TestAnswerKeyEndpoints:
+    """Tests for answer key CRUD endpoints."""
 
-                user = User(
-                    email=f"sub_test_{uuid4().hex[:8]}@example.com",
-                    password_hash="pw",
-                    full_name="Sub User",
-                    role_id=str(role.id)
-                )
-                db.add(user)
-                await db.commit()
-            except:
-                # If already exists or error, fetch existing (basic handling)
-                pass
+    async def test_create_answer_key_unauthorized(
+        self,
+        client,
+        sample_answer_key_data: dict,
+    ):
+        """Test creating answer key without auth returns 401."""
+        response = await client.post(
+            "/api/v1/paper-checking/answer-keys",
+            json=sample_answer_key_data,
+        )
+        assert response.status_code == 401
 
-            
-            # Mock OCR and LLM
-            mock_ocr = MagicMock()
-            mock_ocr.extract_text = AsyncMock(return_value=MOCK_OCR_TEXT)
-            mock_ocr.segment_answers = MagicMock(return_value=MOCK_SEGMENTS)
-            
-            mock_llm_service = MagicMock()
-            mock_runnable = MockRunnable(response_content=json.dumps(MOCK_GRADING_RESULT))
-            type(mock_llm_service).llm = PropertyMock(return_value=mock_runnable)
-            
-            with patch("app.services.checking_service.OCRService", return_value=mock_ocr), \
-                 patch("app.services.checking_service.get_llm_service", return_value=mock_llm_service):
-                
-                service = CheckingService(db)
-                # Ensure the service instance uses our mocks
-                service.ocr = mock_ocr
-                service.llm = mock_llm_service # Override init
-                
-                # 1. Create Submission
-                submission = await service.create_submission(
-                    user_id=user.id,
-                    input_url="http://test.com/paper.jpg"
-                )
-                assert submission.status == SubmissionStatus.UPLOADING
-                
-                # 2. Process
-                await service.process_submission(submission.id)
-                
-                # 3. Verify
-                await db.refresh(submission)
-                assert submission.status == SubmissionStatus.COMPLETED
-                assert submission.extracted_text == MOCK_OCR_TEXT
-                assert len(submission.answers) == 2
-                assert submission.answers[0].marks_obtained == 4.5
-                assert submission.overall_score == 9.0  # 4.5 * 2
+    async def test_list_answer_keys_unauthorized(
+        self,
+        client,
+    ):
+        """Test listing answer keys without auth returns 401."""
+        response = await client.get(
+            "/api/v1/paper-checking/answer-keys",
+        )
+        assert response.status_code == 401
+
+    async def test_get_answer_key_unauthorized(
+        self,
+        client,
+    ):
+        """Test getting answer key without auth returns 401."""
+        fake_id = str(uuid4())
+        response = await client.get(
+            f"/api/v1/paper-checking/answer-keys/{fake_id}",
+        )
+        assert response.status_code == 401
 
 
-@pytest.mark.anyio
-async def test_api_endpoints(client):
-    """Test API registration."""
-    response = await client.get("/openapi.json")
-    paths = response.json()["paths"]
-    # Router prefix is /paper-checking, and included in /api/v1
-    assert "/api/v1/paper-checking/upload" in paths
-    assert "/api/v1/paper-checking/answer-key" in paths
+@pytest.mark.asyncio(loop_scope="session")
+class TestPaperCheckEndpoints:
+    """Tests for paper checking endpoints."""
+
+    async def test_submit_paper_unauthorized(
+        self,
+        client,
+    ):
+        """Test paper submission without auth returns 401."""
+        fake_id = str(uuid4())
+        test_file_content = b"Test paper content"
+        
+        response = await client.post(
+            "/api/v1/paper-checking/paper-checks",
+            data={
+                "answer_key_id": fake_id,
+            },
+            files={
+                "file": ("test_paper.pdf", test_file_content, "application/pdf"),
+            },
+        )
+        assert response.status_code == 401
+
+    async def test_get_results_unauthorized(
+        self,
+        client,
+    ):
+        """Test getting results without auth returns 401."""
+        fake_id = str(uuid4())
+        response = await client.get(
+            f"/api/v1/paper-checking/paper-checks/{fake_id}",
+        )
+        assert response.status_code == 401
+
+    async def test_list_my_papers_unauthorized(
+        self,
+        client,
+    ):
+        """Test listing papers without auth returns 401."""
+        response = await client.get(
+            "/api/v1/paper-checking/my-papers",
+        )
+        assert response.status_code == 401

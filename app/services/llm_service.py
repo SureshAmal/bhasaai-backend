@@ -237,7 +237,7 @@ class LLMService:
                 "total_questions": total_questions,
                 "difficulty_distribution": f"Easy {difficulty_distribution.get('easy', 30)}%, Medium {difficulty_distribution.get('medium', 50)}%, Hard {difficulty_distribution.get('hard', 20)}%",
                 "question_types": json.dumps(question_types),
-                "language_instruction": LANGUAGE_INSTRUCTIONS.get(language, LANGUAGE_INSTRUCTIONS["gu-en"]),
+                "language_instruction": LANGUAGE_INSTRUCTIONS.get(language, LANGUAGE_INSTRUCTIONS["gu"]),
                 "include_answers_instruction": "Include correct answers and explanations." if include_answers else "",
             })
             

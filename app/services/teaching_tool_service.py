@@ -78,7 +78,7 @@ class TeachingToolService:
             
     async def _generate_mind_map(self, request: ToolGenerateRequest) -> dict:
         """Generate JSON structure for mind map."""
-        lang_instruction = LANGUAGE_INSTRUCTIONS.get(request.language, LANGUAGE_INSTRUCTIONS["en"])
+        lang_instruction = LANGUAGE_INSTRUCTIONS.get(request.language, LANGUAGE_INSTRUCTIONS["gu"])
         
         chain = MIND_MAP_PROMPT | self.llm.llm
         
@@ -93,7 +93,7 @@ class TeachingToolService:
 
     async def _generate_lesson_plan(self, request: ToolGenerateRequest) -> dict:
         """Generate structured lesson plan."""
-        lang_instruction = LANGUAGE_INSTRUCTIONS.get(request.language, LANGUAGE_INSTRUCTIONS["en"])
+        lang_instruction = LANGUAGE_INSTRUCTIONS.get(request.language, LANGUAGE_INSTRUCTIONS["gu"])
         
         chain = LESSON_PLAN_PROMPT | self.llm.llm
         
@@ -109,7 +109,7 @@ class TeachingToolService:
 
     async def _generate_analogy(self, request: ToolGenerateRequest) -> dict:
         """Generate concept analogy."""
-        lang_instruction = LANGUAGE_INSTRUCTIONS.get(request.language, LANGUAGE_INSTRUCTIONS["en"])
+        lang_instruction = LANGUAGE_INSTRUCTIONS.get(request.language, LANGUAGE_INSTRUCTIONS["gu"])
         
         chain = ANALOGY_PROMPT | self.llm.llm
         
@@ -165,3 +165,15 @@ class TeachingToolService:
         )
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
+
+    async def delete_tool(self, tool_id: UUID, user_id: UUID) -> bool:
+        """Soft delete a teaching tool."""
+        tool = await self.get_tool(tool_id, user_id)
+        if not tool:
+            return False
+            
+        tool.is_active = False
+        await self.db.commit()
+        
+        logger.info(f"Teaching tool deleted: {tool_id}")
+        return True

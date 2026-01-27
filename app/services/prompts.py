@@ -41,13 +41,13 @@ Requirements:
 Return ONLY a valid JSON array of questions. Each question must have this structure:
 {{
     "question_number": 1,
-    "question_text": "Question in English",
-    "question_text_gujarati": "Question in Gujarati (if language includes gu)",
+    "question_text": "Question content (in target language)",
+    "question_text_gujarati": "Question in Gujarati (only if bilingual requested)",
     "question_type": "mcq|short_answer|long_answer|true_false|fill_blank",
     "marks": 2,
     "difficulty": "easy|medium|hard",
-    "answer": "Correct answer",
-    "answer_gujarati": "Answer in Gujarati (if applicable)",
+    "answer": "Correct answer (in target language)",
+    "answer_gujarati": "Answer in Gujarati (only if bilingual requested)",
     "options": ["A", "B", "C", "D"] (for MCQ only),
     "correct_option": 0 (0-indexed, for MCQ only),
     "explanation": "Brief explanation",
@@ -72,8 +72,10 @@ Return ONLY a JSON array of topic strings, e.g. ["Topic 1", "Topic 2"]"""
 
 
 # Language Instructions
+DEFAULT_LANGUAGE_INSTRUCTION = "6. Output MUST be in Gujarati (ગુજરાતી) script. All explanations, answers, and feedback must be in Gujarati. English terms can be included in brackets if technical."
+
 LANGUAGE_INSTRUCTIONS = {
-    "gu": "6. Output MUST be in Gujarati (ગુજરાતી) script. All explanations, answers, and feedback must be in Gujarati. English terms can be included in brackets if technical.",
+    "gu": DEFAULT_LANGUAGE_INSTRUCTION,
     "en": "6. Output MUST be in English only.",
     "gu-en": "6. Output should be bilingual - provide both English and Gujarati versions.",
 }

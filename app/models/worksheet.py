@@ -101,7 +101,8 @@ class Worksheet(Base):
         "WorksheetQuestion",
         back_populates="worksheet",
         lazy="selectin",
-        order_by="WorksheetQuestion.order"
+        order_by="WorksheetQuestion.order",
+        cascade="all, delete-orphan"
     )
 
 class WorksheetQuestion(Base):

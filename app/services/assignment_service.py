@@ -68,7 +68,7 @@ class AssignmentService:
         subject = None
         grade_level = None
         mode = AssignmentMode.SOLVE
-        language = "en"
+        language = "gu"
         extra_metadata = {}
         
         if isinstance(data, AssignmentSubmit):
@@ -332,3 +332,15 @@ class AssignmentService:
         offset = (page - 1) * per_page
         result = await self.db.execute(stmt.offset(offset).limit(per_page))
         return result.scalars().all(), total
+
+    async def delete_assignment(self, assignment_id: UUID, user_id: UUID) -> bool:
+        """Soft delete an assignment."""
+        assignment = await self.get_assignment(assignment_id, user_id)
+        if not assignment:
+            return False
+            
+        assignment.is_active = False
+        await self.db.commit()
+        
+        logger.info(f"Assignment deleted: {assignment_id}")
+        return True

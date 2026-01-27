@@ -1168,6 +1168,47 @@
             }
           }
         }
+      },
+      "delete": {
+        "tags": [
+          "Assignments",
+          "Assignments"
+        ],
+        "summary": "Delete Assignment",
+        "description": "Delete an assignment (soft delete).",
+        "operationId": "delete_assignment_api_v1_assignments__assignment_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "assignment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Assignment Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/assignments/{assignment_id}/hint": {
@@ -1405,17 +1446,84 @@
             }
           }
         }
+      },
+      "delete": {
+        "tags": [
+          "Teaching Tools",
+          "Teaching Tools"
+        ],
+        "summary": "Delete Teaching Tool",
+        "description": "Delete a teaching tool (soft delete).",
+        "operationId": "delete_tool_api_v1_teaching_tools__tool_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "tool_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Tool Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
-    "/api/v1/paper-checking/answer-key": {
+    "/api/v1/paper-checking/answer-keys": {
+      "get": {
+        "tags": [
+          "Paper Checking",
+          "Paper Checking"
+        ],
+        "summary": "List Answer Keys",
+        "description": "Retrieve all answer keys created by the current user.",
+        "operationId": "list_answer_keys_api_v1_paper_checking_answer_keys_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
       "post": {
         "tags": [
           "Paper Checking",
           "Paper Checking"
         ],
         "summary": "Create Answer Key",
-        "description": "Create or update assignment rubric (Answer Key).",
-        "operationId": "create_answer_key_api_v1_paper_checking_answer_key_post",
+        "description": "Create an answer key with expected answers, keywords, and marking scheme for grading student papers.",
+        "operationId": "create_answer_key_api_v1_paper_checking_answer_keys_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1455,20 +1563,118 @@
         ]
       }
     },
-    "/api/v1/paper-checking/upload": {
+    "/api/v1/paper-checking/answer-keys/{key_id}": {
+      "get": {
+        "tags": [
+          "Paper Checking",
+          "Paper Checking"
+        ],
+        "summary": "Get Answer Key",
+        "description": "Retrieve a specific answer key by ID.",
+        "operationId": "get_answer_key_api_v1_paper_checking_answer_keys__key_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "key_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Key Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Paper Checking",
+          "Paper Checking"
+        ],
+        "summary": "Delete Answer Key",
+        "description": "Delete an answer key. This will also delete all checked papers associated with it.",
+        "operationId": "delete_answer_key_api_v1_paper_checking_answer_keys__key_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "key_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Key Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/paper-checking/paper-checks": {
       "post": {
         "tags": [
           "Paper Checking",
           "Paper Checking"
         ],
-        "summary": "Upload Answer Sheet",
-        "description": "Upload a student answer sheet (PDF/Image).\nTriggers async processing.",
-        "operationId": "upload_submission_api_v1_paper_checking_upload_post",
+        "summary": "Submit Paper for Checking",
+        "description": "Upload a student answer paper (PDF/Image) for automated checking against an answer key.",
+        "operationId": "submit_paper_for_checking_api_v1_paper_checking_paper_checks_post",
         "requestBody": {
           "content": {
             "multipart/form-data": {
               "schema": {
-                "$ref": "#/components/schemas/Body_upload_submission_api_v1_paper_checking_upload_post"
+                "$ref": "#/components/schemas/Body_submit_paper_for_checking_api_v1_paper_checking_paper_checks_post"
               }
             }
           },
@@ -1503,15 +1709,15 @@
         ]
       }
     },
-    "/api/v1/paper-checking/submission/{submission_id}": {
+    "/api/v1/paper-checking/paper-checks/{paper_id}": {
       "get": {
         "tags": [
           "Paper Checking",
           "Paper Checking"
         ],
-        "summary": "Get Graded Result",
-        "description": "Get status and results of a submission.",
-        "operationId": "get_submission_api_v1_paper_checking_submission__submission_id__get",
+        "summary": "Get Check Results",
+        "description": "Retrieve the grading results for a submitted paper.",
+        "operationId": "get_check_results_api_v1_paper_checking_paper_checks__paper_id__get",
         "security": [
           {
             "HTTPBearer": []
@@ -1519,13 +1725,13 @@
         ],
         "parameters": [
           {
-            "name": "submission_id",
+            "name": "paper_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "title": "Submission Id"
+              "title": "Paper Id"
             }
           }
         ],
@@ -1551,6 +1757,84 @@
             }
           }
         }
+      }
+    },
+    "/api/v1/paper-checking/answer-keys/{key_id}/papers": {
+      "get": {
+        "tags": [
+          "Paper Checking",
+          "Paper Checking"
+        ],
+        "summary": "List Papers for Answer Key",
+        "description": "List all student papers checked with a specific answer key.",
+        "operationId": "list_papers_for_answer_key_api_v1_paper_checking_answer_keys__key_id__papers_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "key_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Key Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/paper-checking/my-papers": {
+      "get": {
+        "tags": [
+          "Paper Checking",
+          "Paper Checking"
+        ],
+        "summary": "List My Checked Papers",
+        "description": "List all papers checked by the current user.",
+        "operationId": "list_my_checked_papers_api_v1_paper_checking_my_papers_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/api/v1/learning/profile": {
@@ -1852,6 +2136,46 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Worksheets"
+        ],
+        "summary": "Delete Worksheet",
+        "description": "Delete a worksheet.",
+        "operationId": "delete_worksheet_api_v1_worksheets__worksheet_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "worksheet_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Worksheet Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
           },
           "422": {
             "description": "Validation Error",
@@ -2524,26 +2848,78 @@
         ],
         "title": "APIResponse[dict[str, Any]]"
       },
-      "AnswerCriteria": {
+      "AnswerItem": {
         "properties": {
-          "expected_answer": {
+          "question_number": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Question Number",
+            "description": "Question number (1-indexed)"
+          },
+          "type": {
             "type": "string",
-            "title": "Expected Answer"
+            "enum": [
+              "mcq",
+              "short_answer",
+              "long_answer"
+            ],
+            "title": "Type",
+            "description": "Question type"
+          },
+          "correct_answer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correct Answer",
+            "description": "Correct option for MCQ (e.g., 'A', 'B', 'C', 'D')"
+          },
+          "expected_answer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Answer",
+            "description": "Expected answer text for short/long answer questions"
+          },
+          "expected_answer_gujarati": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Answer Gujarati",
+            "description": "Expected answer in Gujarati"
           },
           "keywords": {
             "items": {
               "type": "string"
             },
             "type": "array",
-            "title": "Keywords"
+            "title": "Keywords",
+            "description": "Keywords for semantic matching"
           },
           "max_marks": {
             "type": "number",
-            "title": "Max Marks"
+            "exclusiveMinimum": 0.0,
+            "title": "Max Marks",
+            "description": "Maximum marks for this question"
           },
           "partial_marking": {
             "type": "boolean",
             "title": "Partial Marking",
+            "description": "Whether partial marks are allowed",
             "default": true
           },
           "acceptable_variations": {
@@ -2551,39 +2927,89 @@
               "type": "string"
             },
             "type": "array",
-            "title": "Acceptable Variations"
+            "title": "Acceptable Variations",
+            "description": "Alternative acceptable answers"
           }
         },
         "type": "object",
         "required": [
-          "expected_answer",
+          "question_number",
+          "type",
           "max_marks"
         ],
-        "title": "AnswerCriteria",
-        "description": "Grading criteria for a single question."
+        "title": "AnswerItem",
+        "description": "Single answer item in an answer key.\n\nSupports MCQ, short answer, and long answer question types."
       },
       "AnswerKeyCreate": {
         "properties": {
-          "question_paper_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Question Paper Id"
+          "paper_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paper Id",
+            "description": "Optional linked Question Paper ID"
           },
-          "content": {
-            "additionalProperties": {
-              "$ref": "#/components/schemas/AnswerCriteria"
+          "title": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title",
+            "description": "Answer key title"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject",
+            "description": "Subject (e.g., 'science', 'math')"
+          },
+          "total_marks": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Total Marks",
+            "description": "Total marks for all questions"
+          },
+          "answers": {
+            "items": {
+              "$ref": "#/components/schemas/AnswerItem"
             },
-            "type": "object",
-            "title": "Content"
+            "type": "array",
+            "minItems": 1,
+            "title": "Answers",
+            "description": "List of answer items"
+          },
+          "marking_scheme": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MarkingScheme"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Marking configuration"
           }
         },
         "type": "object",
         "required": [
-          "question_paper_id",
-          "content"
+          "title",
+          "total_marks",
+          "answers"
         ],
         "title": "AnswerKeyCreate",
-        "description": "Request to create an answer key."
+        "description": "Request schema for creating an answer key.\n\nExample:\n    {\n        \"title\": \"Science Quarterly Exam - Answer Key\",\n        \"subject\": \"science\",\n        \"total_marks\": 50,\n        \"answers\": [\n            {\"question_number\": 1, \"type\": \"mcq\", \"correct_answer\": \"B\", \"max_marks\": 1},\n            {\"question_number\": 2, \"type\": \"short_answer\", \"expected_answer\": \"...\", \"keywords\": [...], \"max_marks\": 5}\n        ]\n    }"
       },
       "AssignmentCreate": {
         "properties": {
@@ -2772,6 +3198,52 @@
         "title": "AuthResponse",
         "description": "Response after login/registration.\n\nIncludes user info and tokens."
       },
+      "Body_submit_paper_for_checking_api_v1_paper_checking_paper_checks_post": {
+        "properties": {
+          "answer_key_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Answer Key Id",
+            "description": "Answer key ID to check against"
+          },
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File",
+            "description": "Student answer paper (PDF or image)"
+          },
+          "student_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Student Name",
+            "description": "Student's name"
+          },
+          "student_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Student Id",
+            "description": "Student's ID or roll number"
+          }
+        },
+        "type": "object",
+        "required": [
+          "answer_key_id",
+          "file"
+        ],
+        "title": "Body_submit_paper_for_checking_api_v1_paper_checking_paper_checks_post"
+      },
       "Body_upload_document_api_v1_documents_upload_post": {
         "properties": {
           "file": {
@@ -2807,42 +3279,6 @@
           "file"
         ],
         "title": "Body_upload_document_api_v1_documents_upload_post"
-      },
-      "Body_upload_submission_api_v1_paper_checking_upload_post": {
-        "properties": {
-          "file": {
-            "type": "string",
-            "format": "binary",
-            "title": "File"
-          },
-          "question_paper_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Question Paper Id"
-          },
-          "student_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Student Name"
-          }
-        },
-        "type": "object",
-        "required": [
-          "file"
-        ],
-        "title": "Body_upload_submission_api_v1_paper_checking_upload_post"
       },
       "DifficultyDistribution": {
         "properties": {
@@ -3383,6 +3819,29 @@
         ],
         "title": "LearningProfileResponse",
         "description": "User learning profile statistics."
+      },
+      "MarkingScheme": {
+        "properties": {
+          "keyword_match_percent": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Keyword Match Percent",
+            "description": "Weight percentage for keyword matching (0-100)",
+            "default": 50.0
+          },
+          "semantic_similarity_threshold": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Semantic Similarity Threshold",
+            "description": "Minimum semantic similarity score (0-1)",
+            "default": 0.7
+          }
+        },
+        "type": "object",
+        "title": "MarkingScheme",
+        "description": "Marking scheme configuration for grading.\n\nControls how keyword matching and semantic similarity affect scores."
       },
       "ProgressResponse": {
         "properties": {

@@ -68,6 +68,20 @@ async def get_worksheet(
         raise HTTPException(status_code=404, detail="Worksheet not found")
     return worksheet
 
+@router.delete("/{worksheet_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_worksheet(
+    worksheet_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+) -> None:
+    """
+    Delete a worksheet.
+    """
+    service = WorksheetService(db)
+    success = await service.delete_worksheet(current_user.id, worksheet_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Worksheet not found")
+
 # --- Game / Attempt Routes ---
 
 @router.post("/{worksheet_id}/attempts", response_model=AttemptResponse)

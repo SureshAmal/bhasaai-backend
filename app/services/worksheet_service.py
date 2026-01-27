@@ -145,6 +145,22 @@ class WorksheetService:
         result = await self.db.execute(stmt)
         return result.scalars().all()
 
+    async def delete_worksheet(self, user_id: UUID, worksheet_id: UUID) -> bool:
+        """Delete a worksheet if owned by user."""
+        stmt = select(Worksheet).where(
+            Worksheet.id == str(worksheet_id),
+            Worksheet.user_id == str(user_id)
+        )
+        result = await self.db.execute(stmt)
+        worksheet = result.scalar_one_or_none()
+        
+        if not worksheet:
+            return False
+            
+        await self.db.delete(worksheet)
+        await self.db.commit()
+        return True
+
     # --- Game Logic ---
 
     async def start_attempt(self, user_id: UUID, worksheet_id: UUID) -> WorksheetAttempt:
@@ -187,24 +203,45 @@ class WorksheetService:
         current_q = worksheet.questions[attempt.current_question_index]
         current_step = current_q.steps[attempt.current_step_index]
         
-        # Check answer (simple string matching for now, maybe fuzzy match later)
+        # Check answer
         correct_key = current_step["answer_key"].lower().strip()
-        user_input = step_answer.lower().strip()
+        user_input = step_answer.strip()
+        user_input_lower = user_input.lower()
         
-        is_correct = user_input == correct_key
+        is_correct = False
+        is_skipped = user_input == "SKIP"
+        
+        if is_skipped:
+            is_correct = True # We treat it as "done" but give 0 points
+            message = "Skipped. The answer was: " + current_step["answer_key"]
+        elif user_input_lower == correct_key:
+            is_correct = True
+            message = "Correct!"
+        else:
+            # Fuzzy match attempt: if user answer is IN key or key is IN user answer (lenient)
+            # Useful for "Jupiter" vs "Jupiter, Saturn..."
+            if (len(user_input) > 2 and user_input_lower in correct_key) or \
+               (len(correct_key) > 2 and correct_key in user_input_lower):
+                is_correct = True
+                message = "Correct!"
+            else:
+                is_correct = False
+                message = f"Incorrect. Hint: {current_step.get('hint', 'Try again')}"
         
         feedback = StepFeedback(
             is_correct=is_correct,
-            message="Correct!" if is_correct else "Try again.",
+            message=message,
             points_awarded=0,
             next_step_index=attempt.current_step_index,
-            next_question_index=attempt.current_question_index
+            next_question_index=attempt.current_question_index,
+             correct_answer=current_step["answer_key"] if is_skipped else None
         )
 
         if is_correct:
-            # Update Score
-            attempt.score += 10
-            feedback.points_awarded = 10
+            # Update Score only if not skipped
+            points = 10 if not is_skipped else 0
+            attempt.score += points
+            feedback.points_awarded = points
             
             # Record progress
             q_id = str(current_q.id)
@@ -216,7 +253,8 @@ class WorksheetService:
             if attempt.current_step_index < len(current_q.steps) - 1:
                 attempt.current_step_index += 1
                 feedback.next_step_index = attempt.current_step_index
-                feedback.message = "Good job! Moving to next step."
+                if not is_skipped:
+                     feedback.message = "Good job! Moving to next step."
             else:
                 # Question completed
                 if attempt.current_question_index < len(worksheet.questions) - 1:
@@ -230,8 +268,6 @@ class WorksheetService:
                     attempt.status = AttemptStatus.COMPLETED
                     feedback.message = "Worksheet completed!"
                     feedback.is_complete = True
-        else:
-             feedback.message = f"Incorrect. Hint: {current_step.get('hint', 'Try again')}"
 
         # Save state
         # Force update for JSONB field

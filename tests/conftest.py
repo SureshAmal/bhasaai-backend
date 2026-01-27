@@ -8,6 +8,7 @@ import asyncio
 from typing import AsyncGenerator
 
 import pytest
+import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 
 from app.main import app
@@ -21,7 +22,7 @@ def event_loop():
     loop.close()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client() -> AsyncGenerator[AsyncClient, None]:
     """Create async HTTP client for testing."""
     transport = ASGITransport(app=app)

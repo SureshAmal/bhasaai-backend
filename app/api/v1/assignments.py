@@ -190,3 +190,34 @@ async def get_hint(
             explanation=hint_data.get("explanation")
         )
     )
+
+
+@router.delete(
+    "/{assignment_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete Assignment",
+    description="Delete an assignment (soft delete).",
+)
+async def delete_assignment(
+    assignment_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Delete an assignment."""
+    service = AssignmentService(db)
+    deleted = await service.delete_assignment(
+        assignment_id=assignment_id,
+        user_id=UUID(str(current_user.id)),
+    )
+    
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "success": False,
+                "message": "Assignment not found",
+                "message_gu": "એસાઇનમેન્ટ મળ્યું નથી",
+            }
+        )
+    
+    return
