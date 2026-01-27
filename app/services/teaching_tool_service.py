@@ -138,23 +138,38 @@ class TeachingToolService:
         user_id: UUID, 
         tool_type: Optional[ToolType] = None,
         page: int = 1, 
-        per_page: int = 20
+        per_page: int = 20,
+        search: Optional[str] = None
     ) -> tuple[list[TeachingTool], int]:
-        """List user's tools."""
-        stmt = select(TeachingTool).where(
+        """List user's tools with filtering."""
+        conditions = [
             TeachingTool.user_id == str(user_id),
             TeachingTool.is_active == True,
-        )
+        ]
         
         if tool_type:
-            stmt = stmt.where(TeachingTool.tool_type == tool_type)
+            conditions.append(TeachingTool.tool_type == tool_type)
             
-        stmt = stmt.order_by(TeachingTool.created_at.desc())
+        if search:
+            conditions.append(TeachingTool.topic.ilike(f"%{search}%"))
+        
+        # Count
+        from sqlalchemy import func
+        count_stmt = select(func.count()).select_from(TeachingTool).where(*conditions)
+        count_res = await self.db.execute(count_stmt)
+        total = count_res.scalar() or 0
         
         # Paginate
         offset = (page - 1) * per_page
-        result = await self.db.execute(stmt.offset(offset).limit(per_page))
-        return result.scalars().all(), 0  # Total count skipped for brevity
+        stmt = (
+            select(TeachingTool)
+            .where(*conditions)
+            .order_by(TeachingTool.created_at.desc())
+            .offset(offset)
+            .limit(per_page)
+        )
+        result = await self.db.execute(stmt)
+        return result.scalars().all(), total
     
     async def get_tool(self, tool_id: UUID, user_id: UUID) -> Optional[TeachingTool]:
         """Get specific tool."""

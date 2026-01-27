@@ -146,6 +146,7 @@ async def list_papers(
     per_page: int = Query(20, ge=1, le=100),
     subject: Optional[str] = None,
     status: Optional[str] = None,
+    search: Optional[str] = None,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -156,6 +157,7 @@ async def list_papers(
     - **per_page**: Items per page (max: 100)
     - **subject**: Filter by subject
     - **status**: Filter by status (draft, generated, published)
+    - **search**: Search by title
     """
     paper_service = QuestionPaperService(db)
     papers, total = await paper_service.list_papers(
@@ -164,6 +166,7 @@ async def list_papers(
         per_page=per_page,
         subject=subject,
         status=status,
+        search=search,
     )
     
     pages = (total + per_page - 1) // per_page if per_page > 0 else 0

@@ -442,6 +442,38 @@
               "default": 20,
               "title": "Per Page"
             }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
+            }
+          },
+          {
+            "name": "file_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "File Type"
+            }
           }
         ],
         "responses": {
@@ -730,6 +762,22 @@
                 }
               ],
               "title": "Status"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
             }
           }
         ],
@@ -1094,6 +1142,38 @@
               "default": 20,
               "title": "Per Page"
             }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
+            }
           }
         ],
         "responses": {
@@ -1372,6 +1452,22 @@
               "default": 20,
               "title": "Per Page"
             }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
+            }
           }
         ],
         "responses": {
@@ -1490,32 +1586,6 @@
       }
     },
     "/api/v1/paper-checking/answer-keys": {
-      "get": {
-        "tags": [
-          "Paper Checking",
-          "Paper Checking"
-        ],
-        "summary": "List Answer Keys",
-        "description": "Retrieve all answer keys created by the current user.",
-        "operationId": "list_answer_keys_api_v1_paper_checking_answer_keys_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/APIResponse"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ]
-      },
       "post": {
         "tags": [
           "Paper Checking",
@@ -1524,15 +1594,20 @@
         "summary": "Create Answer Key",
         "description": "Create an answer key with expected answers, keywords, and marking scheme for grading student papers.",
         "operationId": "create_answer_key_api_v1_paper_checking_answer_keys_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/AnswerKeyCreate"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "201": {
@@ -1555,12 +1630,61 @@
               }
             }
           }
-        },
+        }
+      },
+      "get": {
+        "tags": [
+          "Paper Checking",
+          "Paper Checking"
+        ],
+        "summary": "List Answer Keys",
+        "description": "Retrieve all answer keys created by the current user.",
+        "operationId": "list_answer_keys_api_v1_paper_checking_answer_keys_get",
         "security": [
           {
             "HTTPBearer": []
           }
-        ]
+        ],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/paper-checking/answer-keys/{key_id}": {
@@ -1659,6 +1783,54 @@
             }
           }
         }
+      }
+    },
+    "/api/v1/paper-checking/extract-answer-key": {
+      "post": {
+        "tags": [
+          "Paper Checking",
+          "Paper Checking"
+        ],
+        "summary": "Extract Answer Key from File",
+        "description": "Extract structure (questions, marks, answers) from an uploaded file (PDF/Image) using AI.",
+        "operationId": "extract_answer_key_api_v1_paper_checking_extract_answer_key_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_extract_answer_key_api_v1_paper_checking_extract_answer_key_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/api/v1/paper-checking/paper-checks": {
@@ -3197,6 +3369,21 @@
         ],
         "title": "AuthResponse",
         "description": "Response after login/registration.\n\nIncludes user info and tokens."
+      },
+      "Body_extract_answer_key_api_v1_paper_checking_extract_answer_key_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File",
+            "description": "Answer key file (PDF or image)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_extract_answer_key_api_v1_paper_checking_extract_answer_key_post"
       },
       "Body_submit_paper_for_checking_api_v1_paper_checking_paper_checks_post": {
         "properties": {

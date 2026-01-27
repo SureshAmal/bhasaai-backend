@@ -4,6 +4,7 @@ BhashaAI Backend - Assignments API
 Endpoints for assignment submission and interaction.
 """
 
+from typing import Optional
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -95,6 +96,8 @@ async def create_assignment(
 async def list_assignments(
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
+    status: Optional[str] = None,
+    search: Optional[str] = None,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -103,7 +106,9 @@ async def list_assignments(
     assignments, total = await service.list_assignments(
         user_id=UUID(str(current_user.id)),
         page=page,
-        per_page=per_page
+        per_page=per_page,
+        status=status,
+        search=search,
     )
     
     return APIResponse(

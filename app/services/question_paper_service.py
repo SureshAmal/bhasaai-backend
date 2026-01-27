@@ -187,6 +187,7 @@ class QuestionPaperService:
         per_page: int = 20,
         subject: Optional[str] = None,
         status: Optional[str] = None,
+        search: Optional[str] = None,
     ) -> tuple[list[QuestionPaper], int]:
         """List papers for a user with pagination."""
         # Build query
@@ -199,6 +200,8 @@ class QuestionPaperService:
             conditions.append(QuestionPaper.subject == subject)
         if status:
             conditions.append(QuestionPaper.status == PaperStatus(status))
+        if search:
+            conditions.append(QuestionPaper.title.ilike(f"%{search}%"))
         
         # Count
         count_stmt = select(func.count()).select_from(QuestionPaper).where(*conditions)

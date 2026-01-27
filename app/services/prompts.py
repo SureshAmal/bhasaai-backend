@@ -190,6 +190,45 @@ Return ONLY valid JSON:
 )
 
 
+# ANSWER KEY EXTRACTION PROMPT
+ANSWER_KEY_EXTRACTION_PROMPT = PromptTemplate(
+    input_variables=["text"],
+    template="""You are an expert education assistant.
+Extract an Answer Key structure from the following text (which might be from a PDF or image).
+
+Text:
+{text}
+
+Extract the questions, their types, marks, and correct answers.
+Return ONLY a valid JSON object matching this structure:
+
+{{
+    "title": "Suggested Title (e.g. Science Unit Test)",
+    "subject": "Inferred Subject",
+    "total_marks": 50,
+    "answers": [
+        {{
+            "question_number": 1,
+            "type": "mcq|short_answer|long_answer",
+            "max_marks": 1.0,
+            "correct_answer": "Option letter for MCQ (e.g. 'A')",
+            "expected_answer": "Text answer for non-MCQ",
+            "keywords": ["key", "words"] (for non-MCQ),
+            "partial_marking": true
+        }},
+        ...
+    ]
+}}
+
+Rules:
+1. Infer types based on content (Options present = MCQ).
+2. Infer marks if mentioned (e.g. "[2 marks]"), otherwise default to 1.
+3. If no clear correct answer is found, leave 'expected_answer' empty but create the question entry.
+4. Return ONLY valid JSON.
+"""
+)
+
+
 # --- PAPER CHECKING PROMPTS ---
 
 GRADING_PROMPT = PromptTemplate(

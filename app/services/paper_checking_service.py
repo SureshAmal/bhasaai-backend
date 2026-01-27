@@ -37,7 +37,11 @@ from app.schemas.paper_checking import (
 )
 from app.services.ocr_service import OCRService
 from app.services.llm_service import get_llm_service
-from app.services.prompts import GRADING_PROMPT, LANGUAGE_INSTRUCTIONS
+from app.services.prompts import (
+    GRADING_PROMPT, 
+    LANGUAGE_INSTRUCTIONS,
+    ANSWER_KEY_EXTRACTION_PROMPT,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -129,21 +133,28 @@ class PaperCheckingService:
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
     
-    async def get_answer_keys_by_user(self, user_id: UUID) -> List[AnswerKey]:
+    async def get_answer_keys_by_user(
+        self, 
+        user_id: UUID,
+        search: Optional[str] = None
+    ) -> List[AnswerKey]:
         """
-        List all answer keys for a user.
+        List all answer keys for a user with optional search.
         
         Args:
             user_id: User's UUID
+            search: Search term for title
             
         Returns:
             List of answer keys
         """
-        stmt = (
-            select(AnswerKey)
-            .where(AnswerKey.user_id == str(user_id))
-            .order_by(AnswerKey.created_at.desc())
-        )
+        stmt = select(AnswerKey).where(AnswerKey.user_id == str(user_id))
+        
+        if search:
+            stmt = stmt.where(AnswerKey.title.ilike(f"%{search}%"))
+            
+        stmt = stmt.order_by(AnswerKey.created_at.desc())
+        
         result = await self.db.execute(stmt)
         return list(result.scalars().all())
     
@@ -165,6 +176,46 @@ class PaperCheckingService:
         await self.db.commit()
         logger.info(f"Deleted answer key {key_id}")
         return True
+    
+    async def extract_answer_key_from_file(self, file_path: str) -> dict:
+        """
+        Extract answer key structure from a file (PDF/Image) using OCR and AI.
+        
+        Args:
+            file_path: Path to the uploaded file
+            
+        Returns:
+            Dict matching AnswerKeyCreate schema structure
+        """
+        try:
+            # 1. OCR Extraction
+            logger.info(f"Extracting answer key from {file_path}")
+            extracted_text = await self.ocr.extract_text(file_path)
+            
+            if not extracted_text.strip():
+                raise ValueError("No text could be extracted from the file.")
+            
+            # 2. AI Parsing
+            chain = ANSWER_KEY_EXTRACTION_PROMPT | self.llm.llm
+            response = await chain.ainvoke({"text": extracted_text[:10000]}) # Limit context size
+            
+            content = response.content.strip()
+            
+            # Clean JSON markdown
+            if "```json" in content:
+                content = content.split("```json")[1].split("```")[0]
+            elif "```" in content:
+                content = content.split("```")[1]
+                
+            import json
+            data = json.loads(content.strip())
+            
+            # Additional cleanup/validation could go here
+            return data
+            
+        except Exception as e:
+            logger.error(f"Failed to extract answer key: {e}")
+            raise
     
     # =========================================================================
     # Paper Submission Operations

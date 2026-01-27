@@ -133,14 +133,18 @@ async def upload_document(
 async def list_documents(
     page: int = 1,
     per_page: int = 20,
+    search: Optional[str] = None,
+    file_type: Optional[str] = None,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """
-    List user's documents with pagination.
+    List user's documents with pagination and filtering.
     
     - **page**: Page number (default: 1)
     - **per_page**: Items per page (default: 20, max: 100)
+    - **search**: Search by filename
+    - **file_type**: Filter by file type
     """
     per_page = min(per_page, 100)
     
@@ -149,6 +153,8 @@ async def list_documents(
         user_id=UUID(str(current_user.id)),
         page=page,
         per_page=per_page,
+        search=search,
+        file_type=file_type,
     )
     
     pages = (total + per_page - 1) // per_page if per_page > 0 else 0

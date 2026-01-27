@@ -121,34 +121,62 @@ class DocumentService:
         user_id: UUID,
         page: int = 1,
         per_page: int = 20,
+        search: Optional[str] = None,
+        file_type: Optional[str] = None,
     ) -> tuple[list[Document], int]:
         """
-        List documents for a user with pagination.
+        List documents for a user with pagination and filtering.
         
         Args:
             user_id: User ID
             page: Page number
             per_page: Items per page
+            search: Search term for filename
+            file_type: Filter by file type
         
         Returns:
             tuple: (documents, total_count)
         """
+        # Base query
+        query = select(Document).where(
+            Document.user_id == str(user_id),
+            Document.is_active == True,
+        )
+
+        # Apply filters
+        if search:
+            query = query.where(Document.filename.ilike(f"%{search}%"))
+        
+        if file_type:
+            # Map simplified types to enum if needed, or rely on frontend passing correct enum values
+            # Assuming frontend passes 'pdf', 'docx', 'txt' matches DB enum values or string storage
+            # The model uses FileType enum, so we might need to cast if strict
+            query = query.where(Document.file_type == file_type)
+
         # Count total
+        # We need to replicate the query for counting to respect filters
+        # Or usually separate count query is cleaner
+        
+        # Optimize: reuse conditions?
+        # For simple implementation, rebuild count query or use func.count() on the same query object structure
+        
+        # Let's simple rebuild for clarity
         count_stmt = select(Document).where(
             Document.user_id == str(user_id),
             Document.is_active == True,
         )
+        if search:
+            count_stmt = count_stmt.where(Document.filename.ilike(f"%{search}%"))
+        if file_type:
+            count_stmt = count_stmt.where(Document.file_type == file_type)
+            
         count_result = await self.db.execute(count_stmt)
         total = len(count_result.scalars().all())
         
         # Get paginated results
         offset = (page - 1) * per_page
         stmt = (
-            select(Document)
-            .where(
-                Document.user_id == str(user_id),
-                Document.is_active == True,
-            )
+            query
             .order_by(Document.created_at.desc())
             .offset(offset)
             .limit(per_page)

@@ -63,6 +63,7 @@ async def list_tools(
     type: Optional[ToolType] = None,
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
+    search: Optional[str] = None,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -72,7 +73,8 @@ async def list_tools(
         user_id=UUID(str(current_user.id)),
         tool_type=type,
         page=page,
-        per_page=per_page
+        per_page=per_page,
+        search=search,
     )
     
     return APIResponse(

@@ -15,6 +15,9 @@ API Flow:
 
 from typing import List, Optional
 from uuid import UUID
+import shutil
+import tempfile
+import os
 
 from fastapi import (
     APIRouter,
@@ -104,6 +107,7 @@ async def create_answer_key(
     description="Retrieve all answer keys created by the current user.",
 )
 async def list_answer_keys(
+    search: Optional[str] = None,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> APIResponse:
@@ -118,7 +122,7 @@ async def list_answer_keys(
         APIResponse with list of answer keys
     """
     service = PaperCheckingService(db)
-    answer_keys = await service.get_answer_keys_by_user(UUID(str(current_user.id)))
+    answer_keys = await service.get_answer_keys_by_user(UUID(str(current_user.id)), search=search)
     
     items = [
         AnswerKeyListItem(
@@ -229,6 +233,64 @@ async def delete_answer_key(
         message="Answer key deleted successfully",
         message_gu="જવાબ ચાવી સફળતાપૂર્વક કાઢી નાખવામાં આવી",
     )
+
+
+@router.post(
+    "/extract-answer-key",
+    response_model=APIResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Extract Answer Key from File",
+    description="Extract structure (questions, marks, answers) from an uploaded file (PDF/Image) using AI.",
+)
+async def extract_answer_key(
+    file: UploadFile = File(..., description="Answer key file (PDF or image)"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> APIResponse:
+    """
+    Extract answer key structure from a file.
+    
+    Args:
+        file: Uploaded file
+        current_user: Authenticated user
+        db: Database session
+        
+    Returns:
+        APIResponse with extracted data
+    """
+    # Validate file type
+    allowed_types = {"application/pdf", "image/jpeg", "image/png", "image/webp"}
+    if file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid file type. Allowed: PDF, JPEG, PNG, WebP",
+        )
+    
+    # Save to temp file
+    suffix = os.path.splitext(file.filename)[1] if file.filename else ""
+    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+        shutil.copyfileobj(file.file, tmp)
+        tmp_path = tmp.name
+
+    try:
+        service = PaperCheckingService(db)
+        data = await service.extract_answer_key_from_file(tmp_path)
+        
+        return APIResponse(
+            success=True,
+            message="Answer key extracted successfully",
+            message_gu="જવાબ ચાવી સફળતાપૂર્વક કાઢવામાં આવી",
+            data=data,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        )
+    finally:
+        # Cleanup
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
 
 
 # =============================================================================

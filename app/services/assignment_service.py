@@ -312,25 +312,41 @@ class AssignmentService:
         self, 
         user_id: UUID, 
         page: int = 1, 
-        per_page: int = 20
+        per_page: int = 20,
+        status: Optional[str] = None,
+        search: Optional[str] = None
     ) -> tuple[list[Assignment], int]:
-        """List user assignments."""
-        stmt = select(Assignment).where(
+        """List user assignments with filtering."""
+        conditions = [
             Assignment.user_id == str(user_id),
             Assignment.is_active == True,
-        ).order_by(Assignment.created_at.desc())
+        ]
         
+        if status:
+            conditions.append(Assignment.status == ProcessingStatus(status))
+            
+        if search:
+            # Search in question_text or subject
+            conditions.append(
+                (Assignment.question_text.ilike(f"%{search}%")) |
+                (Assignment.subject.ilike(f"%{search}%"))
+            )
+            
         # Count
-        count_stmt = select(func.count()).select_from(Assignment).where(
-            Assignment.user_id == str(user_id),
-            Assignment.is_active == True
-        )
+        count_stmt = select(func.count()).select_from(Assignment).where(*conditions)
         count_res = await self.db.execute(count_stmt)
         total = count_res.scalar()
         
         # Paginate
         offset = (page - 1) * per_page
-        result = await self.db.execute(stmt.offset(offset).limit(per_page))
+        stmt = (
+            select(Assignment)
+            .where(*conditions)
+            .order_by(Assignment.created_at.desc())
+            .offset(offset)
+            .limit(per_page)
+        )
+        result = await self.db.execute(stmt)
         return result.scalars().all(), total
 
     async def delete_assignment(self, assignment_id: UUID, user_id: UUID) -> bool:
