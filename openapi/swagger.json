@@ -566,6 +566,54 @@
         }
       }
     },
+    "/api/v1/documents/{document_id}/download": {
+      "get": {
+        "tags": [
+          "Documents",
+          "Documents"
+        ],
+        "summary": "Download Document",
+        "description": "Download the document file.",
+        "operationId": "download_document_api_v1_documents__document_id__download_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Document Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/question-papers/generate": {
       "post": {
         "tags": [
@@ -964,6 +1012,52 @@
       }
     },
     "/api/v1/assignments": {
+      "post": {
+        "tags": [
+          "Assignments",
+          "Assignments"
+        ],
+        "summary": "Create Assignment",
+        "description": "Publish a question paper as an assignment.",
+        "operationId": "create_assignment_api_v1_assignments_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignmentCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "get": {
         "tags": [
           "Assignments",
@@ -1644,6 +1738,290 @@
           }
         ]
       }
+    },
+    "/api/v1/worksheets/generate": {
+      "post": {
+        "tags": [
+          "Worksheets"
+        ],
+        "summary": "Generate Worksheet",
+        "description": "Generate a new step-by-step worksheet using AI.",
+        "operationId": "generate_worksheet_api_v1_worksheets_generate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorksheetGenerateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorksheetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/worksheets/": {
+      "get": {
+        "tags": [
+          "Worksheets"
+        ],
+        "summary": "List Worksheets",
+        "description": "List user's worksheets.",
+        "operationId": "list_worksheets_api_v1_worksheets__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/WorksheetResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Worksheets Api V1 Worksheets  Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/worksheets/{worksheet_id}": {
+      "get": {
+        "tags": [
+          "Worksheets"
+        ],
+        "summary": "Get Worksheet",
+        "description": "Get worksheet details.",
+        "operationId": "get_worksheet_api_v1_worksheets__worksheet_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "worksheet_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Worksheet Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorksheetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/worksheets/{worksheet_id}/attempts": {
+      "post": {
+        "tags": [
+          "Worksheets"
+        ],
+        "summary": "Start Attempt",
+        "description": "Start a new attempt (game session) for a worksheet.",
+        "operationId": "start_attempt_api_v1_worksheets__worksheet_id__attempts_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "worksheet_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Worksheet Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttemptResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/worksheets/attempts/{attempt_id}": {
+      "get": {
+        "tags": [
+          "Worksheets"
+        ],
+        "summary": "Get Attempt",
+        "description": "Get attempt state.",
+        "operationId": "get_attempt_api_v1_worksheets_attempts__attempt_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "attempt_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Attempt Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttemptResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/worksheets/attempts/{attempt_id}/step": {
+      "post": {
+        "tags": [
+          "Worksheets"
+        ],
+        "summary": "Submit Step",
+        "description": "Submit an answer for a single step.\nReturns feedback and next step info.",
+        "operationId": "submit_step_api_v1_worksheets_attempts__attempt_id__step_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "attempt_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Attempt Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitStepRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StepFeedback"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2207,6 +2585,59 @@
         "title": "AnswerKeyCreate",
         "description": "Request to create an answer key."
       },
+      "AssignmentCreate": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "question_paper_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Question Paper Id"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "published"
+          },
+          "mode": {
+            "type": "string",
+            "title": "Mode",
+            "default": "solve"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "question_paper_id"
+        ],
+        "title": "AssignmentCreate",
+        "description": "Schema for creating a new assignment from a QP."
+      },
       "AssignmentMode": {
         "type": "string",
         "enum": [
@@ -2277,6 +2708,52 @@
         ],
         "title": "AssignmentSubmit",
         "description": "Schema for submitting an assignment."
+      },
+      "AttemptResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "worksheet_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Worksheet Id"
+          },
+          "current_question_index": {
+            "type": "integer",
+            "title": "Current Question Index"
+          },
+          "current_step_index": {
+            "type": "integer",
+            "title": "Current Step Index"
+          },
+          "score": {
+            "type": "integer",
+            "title": "Score"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "progress_data": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Progress Data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "worksheet_id",
+          "current_question_index",
+          "current_step_index",
+          "score",
+          "status",
+          "progress_data"
+        ],
+        "title": "AttemptResponse"
       },
       "AuthResponse": {
         "properties": {
@@ -3488,6 +3965,86 @@
         "title": "RoleResponse",
         "description": "Role information in responses."
       },
+      "StepFeedback": {
+        "properties": {
+          "is_correct": {
+            "type": "boolean",
+            "title": "Is Correct"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "points_awarded": {
+            "type": "integer",
+            "title": "Points Awarded"
+          },
+          "next_step_index": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Step Index"
+          },
+          "next_question_index": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Question Index"
+          },
+          "is_complete": {
+            "type": "boolean",
+            "title": "Is Complete",
+            "default": false
+          },
+          "correct_answer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correct Answer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "is_correct",
+          "message",
+          "points_awarded"
+        ],
+        "title": "StepFeedback"
+      },
+      "SubmitStepRequest": {
+        "properties": {
+          "attempt_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Attempt Id"
+          },
+          "step_answer": {
+            "type": "string",
+            "title": "Step Answer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "attempt_id",
+          "step_answer"
+        ],
+        "title": "SubmitStepRequest"
+      },
       "TTSRequest": {
         "properties": {
           "text": {
@@ -4026,6 +4583,169 @@
         ],
         "title": "VocabularyProgressSubmit",
         "description": "Submission of study result."
+      },
+      "WorksheetGenerateRequest": {
+        "properties": {
+          "topic": {
+            "type": "string",
+            "title": "Topic"
+          },
+          "subject": {
+            "type": "string",
+            "title": "Subject"
+          },
+          "grade_level": {
+            "type": "string",
+            "title": "Grade Level"
+          },
+          "difficulty": {
+            "type": "string",
+            "title": "Difficulty",
+            "default": "medium"
+          },
+          "num_questions": {
+            "type": "integer",
+            "title": "Num Questions",
+            "default": 3
+          }
+        },
+        "type": "object",
+        "required": [
+          "topic",
+          "subject",
+          "grade_level"
+        ],
+        "title": "WorksheetGenerateRequest"
+      },
+      "WorksheetQuestionBase": {
+        "properties": {
+          "content": {
+            "type": "string",
+            "title": "Content"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/WorksheetStep"
+            },
+            "type": "array",
+            "title": "Steps"
+          },
+          "correct_answer": {
+            "type": "string",
+            "title": "Correct Answer"
+          },
+          "order": {
+            "type": "integer",
+            "title": "Order"
+          }
+        },
+        "type": "object",
+        "required": [
+          "content",
+          "steps",
+          "correct_answer",
+          "order"
+        ],
+        "title": "WorksheetQuestionBase"
+      },
+      "WorksheetResponse": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "topic": {
+            "type": "string",
+            "title": "Topic"
+          },
+          "subject": {
+            "type": "string",
+            "title": "Subject"
+          },
+          "grade_level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade Level"
+          },
+          "difficulty": {
+            "type": "string",
+            "title": "Difficulty",
+            "default": "medium"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/WorksheetQuestionBase"
+            },
+            "type": "array",
+            "title": "Questions",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "topic",
+          "subject",
+          "id",
+          "user_id",
+          "status",
+          "created_at"
+        ],
+        "title": "WorksheetResponse"
+      },
+      "WorksheetStep": {
+        "properties": {
+          "step_text": {
+            "type": "string",
+            "title": "Step Text"
+          },
+          "answer_key": {
+            "type": "string",
+            "title": "Answer Key"
+          },
+          "hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hint"
+          }
+        },
+        "type": "object",
+        "required": [
+          "step_text",
+          "answer_key"
+        ],
+        "title": "WorksheetStep"
       }
     },
     "securitySchemes": {

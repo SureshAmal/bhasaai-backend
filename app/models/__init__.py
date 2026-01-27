@@ -56,6 +56,7 @@ from app.models.learning import (
     LearningDifficulty,
     ExerciseType,
 )
+from app.models.worksheet import Worksheet, WorksheetQuestion, WorksheetAttempt, WorksheetStatus, AttemptStatus
 
 __all__ = [
     # Base
@@ -119,4 +120,10 @@ __all__ = [
     "Exercise",
     "DifficultyLevel",
     "ExerciseType",
+    # Phase 8 Models
+    "Worksheet",
+    "WorksheetQuestion",
+    "WorksheetAttempt",
+    "WorksheetStatus",
+    "AttemptStatus",
 ]

@@ -11,6 +11,7 @@ from typing import Any, Optional
 from uuid import UUID
 
 from sqlalchemy import select, func
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import (
@@ -20,6 +21,7 @@ from app.models import (
     AssignmentMode,
     ProcessingStatus,
     DifficultyLevel,
+    InputType,
 )
 from app.schemas.assignment import AssignmentSubmit
 from app.services.llm_service import get_llm_service
@@ -45,39 +47,86 @@ class AssignmentService:
     async def create_assignment(
         self,
         user_id: UUID,
-        data: AssignmentSubmit,
+        data: Any, # AssignmentSubmit or AssignmentCreate
     ) -> Assignment:
         """
         Create a new assignment entry.
         
         Args:
-            user_id: Student ID
-            data: Assignment submission data
+            user_id: User ID (Student or Teacher)
+            data: AssignmentSubmit or AssignmentCreate
         
         Returns:
             Assignment: Created assignment
         """
+        # Distinguish between Submission and Publication
+        from app.schemas.assignment import AssignmentSubmit, AssignmentCreate
+        
+        question_text = ""
+        question_image_url = None
+        input_type = InputType.TEXT
+        subject = None
+        grade_level = None
+        mode = AssignmentMode.SOLVE
+        language = "en"
+        extra_metadata = {}
+        
+        if isinstance(data, AssignmentSubmit):
+            question_text = data.question_text
+            question_image_url = data.question_image_url
+            input_type = data.input_type
+            subject = data.subject
+            grade_level = data.grade_level
+            mode = data.mode
+            language = data.language
+            
+        elif isinstance(data, AssignmentCreate):
+            # Teacher publishing a QP as assignment
+            # We fetch QP to populate basic details
+            from app.models.question_paper import QuestionPaper
+            qp_stmt = select(QuestionPaper).where(QuestionPaper.id == str(data.question_paper_id))
+            qp_res = await self.db.execute(qp_stmt)
+            qp = qp_res.scalar_one_or_none()
+            
+            if qp:
+                question_text = f"Assignment: {data.title}\n{data.description or ''}"
+                subject = qp.subject
+                grade_level = qp.grade_level
+                language = qp.language
+                extra_metadata = {
+                    "question_paper_id": str(qp.id),
+                    "due_date": data.due_date.isoformat() if data.due_date else None,
+                    "type": "homework_publication"
+                }
+            else:
+                question_text = f"Assignment: {data.title}"
+                extra_metadata = {"error": "QP not found"}
+
+            mode = AssignmentMode.SOLVE # Default
+            
         assignment = Assignment(
             user_id=str(user_id),
-            question_text=data.question_text,
-            question_image_url=data.question_image_url,
-            input_type=data.input_type,
-            subject=data.subject,
-            grade_level=data.grade_level,
-            mode=data.mode,
-            language=data.language,
+            question_text=question_text,
+            question_image_url=question_image_url,
+            input_type=input_type,
+            subject=subject,
+            grade_level=grade_level,
+            mode=mode,
+            language=language,
             status=ProcessingStatus.PENDING,
+            extra_metadata=extra_metadata
         )
         
         self.db.add(assignment)
         await self.db.commit()
         await self.db.refresh(assignment)
         
-        # Trigger async processing based on mode
-        if assignment.mode == AssignmentMode.SOLVE:
-            await self._generate_solution(assignment)
-        elif assignment.mode == AssignmentMode.HELP:
-            await self._start_help_session(assignment)
+        # Trigger async processing based on mode (only for submissions)
+        if isinstance(data, AssignmentSubmit):
+            if assignment.mode == AssignmentMode.SOLVE:
+                await self._generate_solution(assignment)
+            elif assignment.mode == AssignmentMode.HELP:
+                await self.start_help_session(assignment)
             
         return assignment
 
@@ -133,7 +182,7 @@ class AssignmentService:
             assignment.extra_metadata = {"error": str(e)}
             await self.db.commit()
 
-    async def _start_help_session(self, assignment: Assignment) -> None:
+    async def start_help_session(self, assignment: Assignment) -> None:
         """Initialize Socratic help session."""
         try:
             assignment.status = ProcessingStatus.PROCESSING
@@ -248,7 +297,10 @@ class AssignmentService:
 
     async def get_assignment(self, assignment_id: UUID, user_id: UUID) -> Optional[Assignment]:
         """Get assignment by ID."""
-        stmt = select(Assignment).where(
+        stmt = select(Assignment).options(
+            selectinload(Assignment.solution),
+            selectinload(Assignment.help_session)
+        ).where(
             Assignment.id == str(assignment_id),
             Assignment.user_id == str(user_id),
             Assignment.is_active == True,

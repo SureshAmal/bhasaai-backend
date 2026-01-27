@@ -234,17 +234,24 @@ Return a valid JSON object with this recursive structure:
 {{
     "id": "root",
     "label": "{topic}",
+    "label_gujarati": "Topic in Gujarati",
     "children": [
         {{
             "id": "1",
             "label": "Subtopic A",
+            "label_gujarati": "Subtopic in Gujarati",
             "children": [ ... ]
         }},
         ...
     ]
 }}
 
-Keep labels concise (1-3 words preferred). Max depth 3 levels.
+CRITICAL RULES:
+1. **DEPTH**: The map MUST have 4+ levels (Root -> Category -> Subconcept -> Detail -> Example).
+2. **BREADTH**: 3-6 nodes per branch.
+3. **DETAIL**: Leaf nodes must be specific examples or facts, not generic labels.
+4. **STRUCTURE**: Ensure the tree is deep and rich.
+
 Return ONLY the JSON."""
 )
 

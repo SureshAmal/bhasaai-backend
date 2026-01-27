@@ -26,6 +26,7 @@ The BhashaAI backend is a comprehensive Education AI platform designed to suppor
 - **AI Grading**:
   - Semantic comparison of student answer vs expected answer.
   - Generates detailed feedback for improvement.
+  - **Localized Feedback**: If the question paper is in Gujarati, AI feedback is strictly provided in Gujarati script.
   - Calculates confidence scores for creating alerts.
 
 ## 4. Assignment & Homework Management
@@ -40,6 +41,7 @@ The BhashaAI backend is a comprehensive Education AI platform designed to suppor
 - **Lesson Planning**: Generates structured lesson plans with objectives, activities, and timelines.
 - **Study Materials**: Creates summaries, flashcards, and notes from syllabus topics.
 - **Help Sessions**: Interactive AI Chatbot that answers student queries contextually (Socratic method).
+- **Strict Language Enforcement**: All AI tools respects user language preference (e.g., if 'gu' is selected, output is forced to Gujarati script).
 
 ## 6. Gujarati Learning Module (Gamified)
 **Language Acquisition System**

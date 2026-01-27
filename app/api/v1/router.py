@@ -60,6 +60,13 @@ api_v1_router.include_router(
     tags=["Learning"],
 )
 
+from app.api.v1.endpoints.worksheets import router as worksheets_router
+api_v1_router.include_router(
+    worksheets_router,
+    prefix="/worksheets",
+    tags=["Worksheets"],
+)
+
 # Placeholder routers for future implementation:
 # api_v1_router.include_router(help_router, prefix="/help-sessions", tags=["Help Sessions"])
 # api_v1_router.include_router(audio_router, prefix="/audio", tags=["Audio"])

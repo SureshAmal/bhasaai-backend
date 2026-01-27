@@ -1,0 +1,2658 @@
+openapi: 3.1.0
+info:
+  title: BhashaAI Backend
+  description: "\n## BhashaAI - Generative AI for Education & Gujarati Language Technologies\n\
+    \nA comprehensive API for educational AI services supporting:\n\n- **Question\
+    \ Paper Generation** - AI-powered question paper creation from educational content\n\
+    - **Assignment Help** - Socratic tutoring and step-by-step solutions\n- **Teaching\
+    \ Tools** - Mind maps, slides, and study materials generation\n- **Paper Checking**\
+    \ - OCR-based automated evaluation with Gujarati support\n- **Gujarati Learning**\
+    \ - Vocabulary, grammar, and gamified learning\n- **Audio Services** - STT/TTS\
+    \ for Gujarati language\n\n### Authentication\nAll protected endpoints require\
+    \ JWT Bearer token authentication.\n\n### Bilingual Support\nResponses include\
+    \ both English and Gujarati (\u0A97\u0AC1\u0A9C\u0AB0\u0ABE\u0AA4\u0AC0) messages.\n\
+    \        "
+  contact:
+    name: BhashaAI Team
+    email: support@bhashaai.com
+  license:
+    name: MIT License
+    url: https://opensource.org/licenses/MIT
+  version: 0.1.0
+paths:
+  /api/v1/health:
+    get:
+      tags:
+      - Health
+      summary: Health Check
+      description: Check the health status of the API and its dependencies.
+      operationId: health_check_api_v1_health_get
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse_HealthResponse_'
+              example:
+                success: true
+                data:
+                  status: healthy
+                  version: 0.1.0
+                  environment: development
+                  services:
+                    database: connected
+                    redis: connected
+                    minio: connected
+                message: Service is healthy
+                message_gu: "\u0AB8\u0AC7\u0AB5\u0ABE \u0AB8\u0ACD\u0AB5\u0AB8\u0ACD\
+                  \u0AA5 \u0A9B\u0AC7"
+        '503':
+          description: Service is unhealthy or degraded
+  /api/v1/health/ready:
+    get:
+      tags:
+      - Health
+      summary: Readiness Check
+      description: Check if the service is ready to handle requests (includes DB check).
+      operationId: readiness_check_api_v1_health_ready_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse_dict_str__Any__'
+  /api/v1/health/live:
+    get:
+      tags:
+      - Health
+      summary: Liveness Check
+      description: Simple liveness probe for container orchestration.
+      operationId: liveness_check_api_v1_health_live_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+                title: Response Liveness Check Api V1 Health Live Get
+  /api/v1/auth/register:
+    post:
+      tags:
+      - Authentication
+      - Authentication
+      summary: Register a new user
+      description: Create a new user account. Default role is 'student'.
+      operationId: register_api_v1_auth_register_post
+      parameters:
+      - name: role
+        in: query
+        required: false
+        schema:
+          type: string
+          default: student
+          title: Role
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse_AuthResponse_'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/auth/login:
+    post:
+      tags:
+      - Authentication
+      - Authentication
+      summary: Login with email and password
+      description: Authenticate user and receive JWT tokens.
+      operationId: login_api_v1_auth_login_post
+      parameters:
+      - name: user-agent
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: User-Agent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse_AuthResponse_'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/auth/refresh:
+    post:
+      tags:
+      - Authentication
+      - Authentication
+      summary: Refresh access token
+      description: Get new access token using refresh token.
+      operationId: refresh_token_api_v1_auth_refresh_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse_TokenResponse_'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/auth/logout:
+    post:
+      tags:
+      - Authentication
+      - Authentication
+      summary: Logout current session
+      description: Invalidate the current refresh token.
+      operationId: logout_api_v1_auth_logout_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse_dict_'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/auth/me:
+    get:
+      tags:
+      - Authentication
+      - Authentication
+      summary: Get current user
+      description: Get the currently authenticated user's profile.
+      operationId: get_me_api_v1_auth_me_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse_UserResponse_'
+      security:
+      - HTTPBearer: []
+  /api/v1/auth/logout-all:
+    post:
+      tags:
+      - Authentication
+      - Authentication
+      summary: Logout from all devices
+      description: Invalidate all refresh tokens for the current user.
+      operationId: logout_all_api_v1_auth_logout_all_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse_dict_'
+      security:
+      - HTTPBearer: []
+  /api/v1/documents/upload:
+    post:
+      tags:
+      - Documents
+      - Documents
+      summary: Upload Document
+      description: Upload a PDF, DOCX, or TXT document for question generation.
+      operationId: upload_document_api_v1_documents_upload_post
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Body_upload_document_api_v1_documents_upload_post'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentUploadResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/documents:
+    get:
+      tags:
+      - Documents
+      - Documents
+      summary: List Documents
+      description: List all documents for the current user.
+      operationId: list_documents_api_v1_documents_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 1
+          title: Page
+      - name: per_page
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+          title: Per Page
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/documents/{document_id}:
+    get:
+      tags:
+      - Documents
+      - Documents
+      summary: Get Document
+      description: Get document details by ID.
+      operationId: get_document_api_v1_documents__document_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: document_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Document Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - Documents
+      - Documents
+      summary: Delete Document
+      description: Delete a document (soft delete).
+      operationId: delete_document_api_v1_documents__document_id__delete
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: document_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Document Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/question-papers/generate:
+    post:
+      tags:
+      - Question Papers
+      - Question Papers
+      summary: Generate Question Paper
+      description: Generate a question paper using AI from document or topic.
+      operationId: generate_paper_api_v1_question_papers_generate_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GeneratePaperRequest'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneratePaperResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/question-papers:
+    get:
+      tags:
+      - Question Papers
+      - Question Papers
+      summary: List Question Papers
+      description: List all question papers for the current user.
+      operationId: list_papers_api_v1_question_papers_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+          title: Page
+      - name: per_page
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 20
+          title: Per Page
+      - name: subject
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Subject
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Status
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/question-papers/{paper_id}:
+    get:
+      tags:
+      - Question Papers
+      - Question Papers
+      summary: Get Question Paper
+      description: Get question paper details with all questions.
+      operationId: get_paper_api_v1_question_papers__paper_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: paper_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Paper Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    put:
+      tags:
+      - Question Papers
+      - Question Papers
+      summary: Update Question Paper
+      description: Update question paper details.
+      operationId: update_paper_api_v1_question_papers__paper_id__put
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: paper_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Paper Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuestionPaperUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - Question Papers
+      - Question Papers
+      summary: Delete Question Paper
+      description: Delete a question paper (soft delete).
+      operationId: delete_paper_api_v1_question_papers__paper_id__delete
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: paper_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Paper Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/question-papers/{paper_id}/publish:
+    post:
+      tags:
+      - Question Papers
+      - Question Papers
+      summary: Publish Question Paper
+      description: Publish a question paper for use.
+      operationId: publish_paper_api_v1_question_papers__paper_id__publish_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: paper_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Paper Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/assignments/submit:
+    post:
+      tags:
+      - Assignments
+      - Assignments
+      summary: Submit Assignment
+      description: Submit a question for solution or help.
+      operationId: submit_assignment_api_v1_assignments_submit_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignmentSubmit'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/assignments:
+    post:
+      tags:
+      - Assignments
+      - Assignments
+      summary: Create Assignment
+      description: Publish a question paper as an assignment.
+      operationId: create_assignment_api_v1_assignments_post
+      security:
+      - HTTPBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignmentCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    get:
+      tags:
+      - Assignments
+      - Assignments
+      summary: List Assignments
+      description: List user's assignments.
+      operationId: list_assignments_api_v1_assignments_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+          title: Page
+      - name: per_page
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 20
+          title: Per Page
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/assignments/{assignment_id}:
+    get:
+      tags:
+      - Assignments
+      - Assignments
+      summary: Get Assignment Details
+      description: Get assignment details including solution/help session.
+      operationId: get_assignment_api_v1_assignments__assignment_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: assignment_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Assignment Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/assignments/{assignment_id}/hint:
+    post:
+      tags:
+      - Assignments
+      - Assignments
+      summary: Get Next Hint
+      description: 'Get next hint for a help session.
+
+        Only valid if assignment mode is ''help''.'
+      operationId: get_hint_api_v1_assignments__assignment_id__hint_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: assignment_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Assignment Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HintRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/teaching-tools/generate:
+    post:
+      tags:
+      - Teaching Tools
+      - Teaching Tools
+      summary: Generate Teaching Tool
+      description: Generate a Mind Map, Lesson Plan, or Analogy.
+      operationId: generate_tool_api_v1_teaching_tools_generate_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ToolGenerateRequest'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/teaching-tools:
+    get:
+      tags:
+      - Teaching Tools
+      - Teaching Tools
+      summary: List Teaching Tools
+      description: List generated tools.
+      operationId: list_tools_api_v1_teaching_tools_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: type
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/ToolType'
+          - type: 'null'
+          title: Type
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+          title: Page
+      - name: per_page
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 20
+          title: Per Page
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/teaching-tools/{tool_id}:
+    get:
+      tags:
+      - Teaching Tools
+      - Teaching Tools
+      summary: Get Tool Details
+      description: Get specific teaching tool.
+      operationId: get_tool_api_v1_teaching_tools__tool_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: tool_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Tool Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/paper-checking/answer-key:
+    post:
+      tags:
+      - Paper Checking
+      - Paper Checking
+      summary: Create Answer Key
+      description: Create or update assignment rubric (Answer Key).
+      operationId: create_answer_key_api_v1_paper_checking_answer_key_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnswerKeyCreate'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/paper-checking/upload:
+    post:
+      tags:
+      - Paper Checking
+      - Paper Checking
+      summary: Upload Answer Sheet
+      description: 'Upload a student answer sheet (PDF/Image).
+
+        Triggers async processing.'
+      operationId: upload_submission_api_v1_paper_checking_upload_post
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Body_upload_submission_api_v1_paper_checking_upload_post'
+        required: true
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/paper-checking/submission/{submission_id}:
+    get:
+      tags:
+      - Paper Checking
+      - Paper Checking
+      summary: Get Graded Result
+      description: Get status and results of a submission.
+      operationId: get_submission_api_v1_paper_checking_submission__submission_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: submission_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Submission Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/learning/profile:
+    get:
+      tags:
+      - Learning
+      - Learning
+      summary: Get User Profile
+      description: Get current user's learning stats and gamification profile.
+      operationId: get_profile_api_v1_learning_profile_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse_LearningProfileResponse_'
+      security:
+      - HTTPBearer: []
+  /api/v1/learning/vocabulary/daily:
+    get:
+      tags:
+      - Learning
+      - Learning
+      summary: Get Daily Vocabulary
+      description: 'Get today''s vocabulary lesson.
+
+        Returns a mix of ''review'' items (due today) and ''new'' items.'
+      operationId: get_daily_vocabulary_api_v1_learning_vocabulary_daily_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 10
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse_List_VocabularyLessonItem__'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/learning/vocabulary/{word_id}/progress:
+    post:
+      tags:
+      - Learning
+      - Learning
+      summary: Submit Word Progress
+      description: 'Submit result of a vocabulary review (0-5 rating).
+
+        Updates scheduling using SM-2 algorithm.'
+      operationId: submit_progress_api_v1_learning_vocabulary__word_id__progress_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: word_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Word Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VocabularyProgressSubmit'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse_ProgressResponse_'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/learning/audio/tts:
+    post:
+      tags:
+      - Learning
+      - Learning
+      summary: Generate Audio (TTS)
+      description: Generate audio URL for given text (Gujarati/English).
+      operationId: generate_audio_api_v1_learning_audio_tts_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TTSRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse_dict_'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+components:
+  schemas:
+    APIResponse:
+      properties:
+        success:
+          type: boolean
+          title: Success
+          description: Whether the operation was successful
+        data:
+          anyOf:
+          - {}
+          - type: 'null'
+          title: Data
+          description: Response data payload
+        message:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Message
+          description: Human-readable message (English)
+        message_gu:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Message Gu
+          description: "Human-readable message (Gujarati / \u0A97\u0AC1\u0A9C\u0AB0\
+            \u0ABE\u0AA4\u0AC0)"
+      type: object
+      required:
+      - success
+      title: APIResponse
+      description: "Standard API response envelope.\n\nAll API responses follow this\
+        \ structure for consistency.\n\nAttributes:\n    success: Whether the operation\
+        \ was successful\n    data: Response payload (type varies by endpoint)\n \
+        \   message: Human-readable message in English\n    message_gu: Human-readable\
+        \ message in Gujarati\n\nExample:\n    ```json\n    {\n        \"success\"\
+        : true,\n        \"data\": {\"id\": \"uuid-here\", \"name\": \"Example\"},\n\
+        \        \"message\": \"Operation successful\",\n        \"message_gu\": \"\
+        \u0A95\u0ABE\u0AAE\u0A97\u0AC0\u0AB0\u0AC0 \u0AB8\u0AAB\u0AB3\"\n    }\n \
+        \   ```"
+    APIResponse_AuthResponse_:
+      properties:
+        success:
+          type: boolean
+          title: Success
+          description: Whether the operation was successful
+        data:
+          anyOf:
+          - $ref: '#/components/schemas/AuthResponse'
+          - type: 'null'
+          description: Response data payload
+        message:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Message
+          description: Human-readable message (English)
+        message_gu:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Message Gu
+          description: "Human-readable message (Gujarati / \u0A97\u0AC1\u0A9C\u0AB0\
+            \u0ABE\u0AA4\u0AC0)"
+      type: object
+      required:
+      - success
+      title: APIResponse[AuthResponse]
+    APIResponse_HealthResponse_:
+      properties:
+        success:
+          type: boolean
+          title: Success
+          description: Whether the operation was successful
+        data:
+          anyOf:
+          - $ref: '#/components/schemas/HealthResponse'
+          - type: 'null'
+          description: Response data payload
+        message:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Message
+          description: Human-readable message (English)
+        message_gu:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Message Gu
+          description: "Human-readable message (Gujarati / \u0A97\u0AC1\u0A9C\u0AB0\
+            \u0ABE\u0AA4\u0AC0)"
+      type: object
+      required:
+      - success
+      title: APIResponse[HealthResponse]
+    APIResponse_LearningProfileResponse_:
+      properties:
+        success:
+          type: boolean
+          title: Success
+          description: Whether the operation was successful
+        data:
+          anyOf:
+          - $ref: '#/components/schemas/LearningProfileResponse'
+          - type: 'null'
+          description: Response data payload
+        message:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Message
+          description: Human-readable message (English)
+        message_gu:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Message Gu
+          description: "Human-readable message (Gujarati / \u0A97\u0AC1\u0A9C\u0AB0\
+            \u0ABE\u0AA4\u0AC0)"
+      type: object
+      required:
+      - success
+      title: APIResponse[LearningProfileResponse]
+    APIResponse_List_VocabularyLessonItem__:
+      properties:
+        success:
+          type: boolean
+          title: Success
+          description: Whether the operation was successful
+        data:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/VocabularyLessonItem'
+            type: array
+          - type: 'null'
+          title: Data
+          description: Response data payload
+        message:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Message
+          description: Human-readable message (English)
+        message_gu:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Message Gu
+          description: "Human-readable message (Gujarati / \u0A97\u0AC1\u0A9C\u0AB0\
+            \u0ABE\u0AA4\u0AC0)"
+      type: object
+      required:
+      - success
+      title: APIResponse[List[VocabularyLessonItem]]
+    APIResponse_ProgressResponse_:
+      properties:
+        success:
+          type: boolean
+          title: Success
+          description: Whether the operation was successful
+        data:
+          anyOf:
+          - $ref: '#/components/schemas/ProgressResponse'
+          - type: 'null'
+          description: Response data payload
+        message:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Message
+          description: Human-readable message (English)
+        message_gu:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Message Gu
+          description: "Human-readable message (Gujarati / \u0A97\u0AC1\u0A9C\u0AB0\
+            \u0ABE\u0AA4\u0AC0)"
+      type: object
+      required:
+      - success
+      title: APIResponse[ProgressResponse]
+    APIResponse_TokenResponse_:
+      properties:
+        success:
+          type: boolean
+          title: Success
+          description: Whether the operation was successful
+        data:
+          anyOf:
+          - $ref: '#/components/schemas/TokenResponse'
+          - type: 'null'
+          description: Response data payload
+        message:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Message
+          description: Human-readable message (English)
+        message_gu:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Message Gu
+          description: "Human-readable message (Gujarati / \u0A97\u0AC1\u0A9C\u0AB0\
+            \u0ABE\u0AA4\u0AC0)"
+      type: object
+      required:
+      - success
+      title: APIResponse[TokenResponse]
+    APIResponse_UserResponse_:
+      properties:
+        success:
+          type: boolean
+          title: Success
+          description: Whether the operation was successful
+        data:
+          anyOf:
+          - $ref: '#/components/schemas/UserResponse'
+          - type: 'null'
+          description: Response data payload
+        message:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Message
+          description: Human-readable message (English)
+        message_gu:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Message Gu
+          description: "Human-readable message (Gujarati / \u0A97\u0AC1\u0A9C\u0AB0\
+            \u0ABE\u0AA4\u0AC0)"
+      type: object
+      required:
+      - success
+      title: APIResponse[UserResponse]
+    APIResponse_dict_:
+      properties:
+        success:
+          type: boolean
+          title: Success
+          description: Whether the operation was successful
+        data:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Data
+          description: Response data payload
+        message:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Message
+          description: Human-readable message (English)
+        message_gu:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Message Gu
+          description: "Human-readable message (Gujarati / \u0A97\u0AC1\u0A9C\u0AB0\
+            \u0ABE\u0AA4\u0AC0)"
+      type: object
+      required:
+      - success
+      title: APIResponse[dict]
+    APIResponse_dict_str__Any__:
+      properties:
+        success:
+          type: boolean
+          title: Success
+          description: Whether the operation was successful
+        data:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Data
+          description: Response data payload
+        message:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Message
+          description: Human-readable message (English)
+        message_gu:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Message Gu
+          description: "Human-readable message (Gujarati / \u0A97\u0AC1\u0A9C\u0AB0\
+            \u0ABE\u0AA4\u0AC0)"
+      type: object
+      required:
+      - success
+      title: APIResponse[dict[str, Any]]
+    AnswerCriteria:
+      properties:
+        expected_answer:
+          type: string
+          title: Expected Answer
+        keywords:
+          items:
+            type: string
+          type: array
+          title: Keywords
+        max_marks:
+          type: number
+          title: Max Marks
+        partial_marking:
+          type: boolean
+          title: Partial Marking
+          default: true
+        acceptable_variations:
+          items:
+            type: string
+          type: array
+          title: Acceptable Variations
+      type: object
+      required:
+      - expected_answer
+      - max_marks
+      title: AnswerCriteria
+      description: Grading criteria for a single question.
+    AnswerKeyCreate:
+      properties:
+        question_paper_id:
+          type: string
+          format: uuid
+          title: Question Paper Id
+        content:
+          additionalProperties:
+            $ref: '#/components/schemas/AnswerCriteria'
+          type: object
+          title: Content
+      type: object
+      required:
+      - question_paper_id
+      - content
+      title: AnswerKeyCreate
+      description: Request to create an answer key.
+    AssignmentCreate:
+      properties:
+        title:
+          type: string
+          title: Title
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        question_paper_id:
+          type: string
+          format: uuid
+          title: Question Paper Id
+        due_date:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Due Date
+        status:
+          type: string
+          title: Status
+          default: published
+        mode:
+          type: string
+          title: Mode
+          default: solve
+      type: object
+      required:
+      - title
+      - question_paper_id
+      title: AssignmentCreate
+      description: Schema for creating a new assignment from a QP.
+    AssignmentMode:
+      type: string
+      enum:
+      - solve
+      - help
+      title: AssignmentMode
+      description: Assignment solving mode.
+    AssignmentSubmit:
+      properties:
+        input_type:
+          $ref: '#/components/schemas/InputType'
+          default: text
+        subject:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Subject
+        grade_level:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Grade Level
+        mode:
+          $ref: '#/components/schemas/AssignmentMode'
+          default: solve
+        language:
+          type: string
+          pattern: ^(gu|en|gu-en)$
+          title: Language
+          default: gu
+        question_text:
+          type: string
+          minLength: 1
+          title: Question Text
+        question_image_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Question Image Url
+      type: object
+      required:
+      - question_text
+      title: AssignmentSubmit
+      description: Schema for submitting an assignment.
+    AuthResponse:
+      properties:
+        user:
+          $ref: '#/components/schemas/UserResponse'
+        tokens:
+          $ref: '#/components/schemas/TokenResponse'
+      type: object
+      required:
+      - user
+      - tokens
+      title: AuthResponse
+      description: 'Response after login/registration.
+
+
+        Includes user info and tokens.'
+    Body_upload_document_api_v1_documents_upload_post:
+      properties:
+        file:
+          type: string
+          format: binary
+          title: File
+        subject:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Subject
+        grade_level:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Grade Level
+      type: object
+      required:
+      - file
+      title: Body_upload_document_api_v1_documents_upload_post
+    Body_upload_submission_api_v1_paper_checking_upload_post:
+      properties:
+        file:
+          type: string
+          format: binary
+          title: File
+        question_paper_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Question Paper Id
+        student_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Student Name
+      type: object
+      required:
+      - file
+      title: Body_upload_submission_api_v1_paper_checking_upload_post
+    DifficultyDistribution:
+      properties:
+        easy:
+          type: integer
+          maximum: 100.0
+          minimum: 0.0
+          title: Easy
+          description: '% of easy questions'
+          default: 30
+        medium:
+          type: integer
+          maximum: 100.0
+          minimum: 0.0
+          title: Medium
+          description: '% of medium questions'
+          default: 50
+        hard:
+          type: integer
+          maximum: 100.0
+          minimum: 0.0
+          title: Hard
+          description: '% of hard questions'
+          default: 20
+      type: object
+      title: DifficultyDistribution
+      description: Distribution of questions by difficulty.
+    DocumentResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        user_id:
+          type: string
+          format: uuid
+          title: User Id
+        institution_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Institution Id
+        filename:
+          type: string
+          title: Filename
+        file_url:
+          type: string
+          title: File Url
+        file_type:
+          type: string
+          title: File Type
+        file_size:
+          type: integer
+          title: File Size
+        mime_type:
+          type: string
+          title: Mime Type
+        text_content:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Text Content
+        extra_metadata:
+          additionalProperties: true
+          type: object
+          title: Extra Metadata
+          default: {}
+        processing_status:
+          type: string
+          title: Processing Status
+        page_count:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Page Count
+        language:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Language
+        subject:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Subject
+        grade_level:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Grade Level
+        is_active:
+          type: boolean
+          title: Is Active
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        download_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Download Url
+      type: object
+      required:
+      - id
+      - user_id
+      - filename
+      - file_url
+      - file_type
+      - file_size
+      - mime_type
+      - processing_status
+      - is_active
+      - created_at
+      - updated_at
+      title: DocumentResponse
+      description: Schema for document response.
+    DocumentUploadResponse:
+      properties:
+        success:
+          type: boolean
+          title: Success
+          default: true
+        message:
+          type: string
+          title: Message
+          default: Document uploaded successfully
+        message_gu:
+          type: string
+          title: Message Gu
+          default: "\u0AA1\u0ACB\u0A95\u0ACD\u0AAF\u0AC1\u0AAE\u0AC7\u0AA8\u0ACD\u0A9F\
+            \ \u0AB8\u0AAB\u0AB3\u0AA4\u0ABE\u0AAA\u0AC2\u0AB0\u0ACD\u0AB5\u0A95 \u0A85\
+            \u0AAA\u0AB2\u0ACB\u0AA1 \u0AA5\u0AAF\u0AC1\u0A82"
+        data:
+          $ref: '#/components/schemas/DocumentResponse'
+      type: object
+      required:
+      - data
+      title: DocumentUploadResponse
+      description: Schema for document upload response.
+    GeneratePaperRequest:
+      properties:
+        document_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Document Id
+          description: Source document ID
+        topic:
+          anyOf:
+          - type: string
+            maxLength: 500
+          - type: 'null'
+          title: Topic
+          description: Topic for generation
+        context:
+          anyOf:
+          - type: string
+            maxLength: 5000
+          - type: 'null'
+          title: Context
+          description: Custom context text
+        title:
+          type: string
+          maxLength: 255
+          minLength: 3
+          title: Title
+        title_gujarati:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Title Gujarati
+        subject:
+          type: string
+          maxLength: 100
+          minLength: 2
+          title: Subject
+        grade_level:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Grade Level
+        total_marks:
+          type: integer
+          maximum: 500.0
+          minimum: 1.0
+          title: Total Marks
+          default: 100
+        duration_minutes:
+          anyOf:
+          - type: integer
+            maximum: 360.0
+            minimum: 15.0
+          - type: 'null'
+          title: Duration Minutes
+        language:
+          type: string
+          pattern: ^(gu|en|gu-en)$
+          title: Language
+          default: gu
+        difficulty_distribution:
+          $ref: '#/components/schemas/DifficultyDistribution'
+        question_types:
+          $ref: '#/components/schemas/QuestionTypeCount'
+        include_answers:
+          type: boolean
+          title: Include Answers
+          description: Include answer key
+          default: true
+        bloom_taxonomy_levels:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Bloom Taxonomy Levels
+      type: object
+      required:
+      - title
+      - subject
+      title: GeneratePaperRequest
+      description: Schema for question paper generation request.
+    GeneratePaperResponse:
+      properties:
+        success:
+          type: boolean
+          title: Success
+          default: true
+        message:
+          type: string
+          title: Message
+          default: Question paper generated successfully
+        message_gu:
+          type: string
+          title: Message Gu
+          default: "\u0AAA\u0ACD\u0AB0\u0AB6\u0ACD\u0AA8\u0AAA\u0AA4\u0ACD\u0AB0 \u0AB8\
+            \u0AAB\u0AB3\u0AA4\u0ABE\u0AAA\u0AC2\u0AB0\u0ACD\u0AB5\u0A95 \u0A9C\u0AA8\
+            \u0AB0\u0AC7\u0A9F \u0AA5\u0AAF\u0AC1\u0A82"
+        data:
+          $ref: '#/components/schemas/QuestionPaperResponse'
+      type: object
+      required:
+      - data
+      title: GeneratePaperResponse
+      description: Schema for paper generation response.
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    HealthResponse:
+      properties:
+        status:
+          type: string
+          title: Status
+          description: Service health status
+        version:
+          type: string
+          title: Version
+          description: Application version
+        environment:
+          type: string
+          title: Environment
+          description: Current environment
+        services:
+          additionalProperties: true
+          type: object
+          title: Services
+          description: Status of dependent services
+      type: object
+      required:
+      - status
+      - version
+      - environment
+      title: HealthResponse
+      description: "Health check response schema.\n\nAttributes:\n    status: Service\
+        \ status (healthy, degraded, unhealthy)\n    version: Application version\n\
+        \    environment: Current environment\n    services: Status of dependent services"
+    HintRequest:
+      properties:
+        student_response:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Student Response
+        request_next_level:
+          type: boolean
+          title: Request Next Level
+          default: true
+      type: object
+      title: HintRequest
+      description: Request for next hint in help mode.
+    InputType:
+      type: string
+      enum:
+      - text
+      - image
+      - pdf
+      title: InputType
+      description: Assignment input types.
+    InstitutionBrief:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        name:
+          type: string
+          title: Name
+        name_gujarati:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name Gujarati
+        type:
+          type: string
+          title: Type
+      type: object
+      required:
+      - id
+      - name
+      - type
+      title: InstitutionBrief
+      description: Brief institution info for user responses.
+    LanguagePreference:
+      type: string
+      enum:
+      - gu
+      - en
+      - gu-en
+      title: LanguagePreference
+      description: User language preference for AI responses.
+    LearningProfileResponse:
+      properties:
+        total_xp:
+          type: integer
+          title: Total Xp
+        streak_days:
+          type: integer
+          title: Streak Days
+        current_level:
+          type: string
+          title: Current Level
+        vocabulary_mastered:
+          type: integer
+          title: Vocabulary Mastered
+        grammar_concepts_completed:
+          type: integer
+          title: Grammar Concepts Completed
+        last_activity_date:
+          type: string
+          format: date-time
+          title: Last Activity Date
+      type: object
+      required:
+      - total_xp
+      - streak_days
+      - current_level
+      - vocabulary_mastered
+      - grammar_concepts_completed
+      - last_activity_date
+      title: LearningProfileResponse
+      description: User learning profile statistics.
+    ProgressResponse:
+      properties:
+        vocabulary_item_id:
+          type: string
+          format: uuid
+          title: Vocabulary Item Id
+        next_review_date:
+          type: string
+          format: date-time
+          title: Next Review Date
+        interval_days:
+          type: number
+          title: Interval Days
+        is_mastered:
+          type: boolean
+          title: Is Mastered
+        xp_gained:
+          type: integer
+          title: Xp Gained
+          default: 0
+      type: object
+      required:
+      - vocabulary_item_id
+      - next_review_date
+      - interval_days
+      - is_mastered
+      title: ProgressResponse
+      description: Scheduling result after submission.
+    QuestionPaperResponse:
+      properties:
+        title:
+          type: string
+          maxLength: 255
+          minLength: 3
+          title: Title
+        title_gujarati:
+          anyOf:
+          - type: string
+            maxLength: 255
+          - type: 'null'
+          title: Title Gujarati
+        subject:
+          type: string
+          maxLength: 100
+          minLength: 2
+          title: Subject
+        grade_level:
+          anyOf:
+          - type: string
+            maxLength: 20
+          - type: 'null'
+          title: Grade Level
+        total_marks:
+          type: integer
+          maximum: 1000.0
+          minimum: 1.0
+          title: Total Marks
+          default: 100
+        duration_minutes:
+          anyOf:
+          - type: integer
+            maximum: 360.0
+            minimum: 15.0
+          - type: 'null'
+          title: Duration Minutes
+        language:
+          type: string
+          pattern: ^(gu|en|gu-en)$
+          title: Language
+          default: gu
+        instructions:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Instructions
+        instructions_gujarati:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Instructions Gujarati
+        id:
+          type: string
+          format: uuid
+          title: Id
+        user_id:
+          type: string
+          format: uuid
+          title: User Id
+        institution_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Institution Id
+        document_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Document Id
+        difficulty_distribution:
+          additionalProperties: true
+          type: object
+          title: Difficulty Distribution
+        question_type_distribution:
+          additionalProperties: true
+          type: object
+          title: Question Type Distribution
+        status:
+          type: string
+          title: Status
+        is_active:
+          type: boolean
+          title: Is Active
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        questions:
+          items:
+            $ref: '#/components/schemas/QuestionResponse'
+          type: array
+          title: Questions
+          default: []
+        question_count:
+          type: integer
+          title: Question Count
+          default: 0
+      type: object
+      required:
+      - title
+      - subject
+      - id
+      - user_id
+      - difficulty_distribution
+      - question_type_distribution
+      - status
+      - is_active
+      - created_at
+      - updated_at
+      title: QuestionPaperResponse
+      description: Schema for question paper response.
+    QuestionPaperUpdate:
+      properties:
+        title:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Title
+        title_gujarati:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Title Gujarati
+        subject:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Subject
+        grade_level:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Grade Level
+        total_marks:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Total Marks
+        duration_minutes:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Duration Minutes
+        language:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Language
+        instructions:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Instructions
+        instructions_gujarati:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Instructions Gujarati
+        status:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Status
+      type: object
+      title: QuestionPaperUpdate
+      description: Schema for updating a question paper.
+    QuestionResponse:
+      properties:
+        question_text:
+          type: string
+          minLength: 5
+          title: Question Text
+        question_text_gujarati:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Question Text Gujarati
+        question_type:
+          type: string
+          title: Question Type
+          default: short_answer
+        marks:
+          type: number
+          exclusiveMinimum: 0.0
+          title: Marks
+          default: 1.0
+        difficulty:
+          type: string
+          title: Difficulty
+          default: medium
+        answer:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Answer
+        answer_gujarati:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Answer Gujarati
+        options:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Options
+        correct_option:
+          anyOf:
+          - type: integer
+            maximum: 5.0
+            minimum: 0.0
+          - type: 'null'
+          title: Correct Option
+        explanation:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Explanation
+        bloom_level:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Bloom Level
+        topic:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Topic
+        keywords:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Keywords
+        id:
+          type: string
+          format: uuid
+          title: Id
+        paper_id:
+          type: string
+          format: uuid
+          title: Paper Id
+        question_number:
+          type: integer
+          title: Question Number
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - question_text
+      - id
+      - paper_id
+      - question_number
+      - created_at
+      title: QuestionResponse
+      description: Schema for question response.
+    QuestionTypeCount:
+      properties:
+        mcq:
+          type: integer
+          minimum: 0.0
+          title: Mcq
+          description: Multiple choice questions
+          default: 0
+        short_answer:
+          type: integer
+          minimum: 0.0
+          title: Short Answer
+          description: Short answer questions
+          default: 0
+        long_answer:
+          type: integer
+          minimum: 0.0
+          title: Long Answer
+          description: Long answer questions
+          default: 0
+        true_false:
+          type: integer
+          minimum: 0.0
+          title: True False
+          description: True/False questions
+          default: 0
+        fill_blank:
+          type: integer
+          minimum: 0.0
+          title: Fill Blank
+          description: Fill in the blank questions
+          default: 0
+      type: object
+      title: QuestionTypeCount
+      description: Count of questions by type.
+    RoleResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        name:
+          type: string
+          title: Name
+        display_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Display Name
+        display_name_gujarati:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Display Name Gujarati
+        permissions:
+          additionalProperties: true
+          type: object
+          title: Permissions
+      type: object
+      required:
+      - id
+      - name
+      title: RoleResponse
+      description: Role information in responses.
+    TTSRequest:
+      properties:
+        text:
+          type: string
+          title: Text
+        language:
+          type: string
+          title: Language
+          default: gu
+      type: object
+      required:
+      - text
+      title: TTSRequest
+      description: Request for Text-to-Speech generation.
+    TokenRefresh:
+      properties:
+        refresh_token:
+          type: string
+          title: Refresh Token
+          description: JWT refresh token
+      type: object
+      required:
+      - refresh_token
+      title: TokenRefresh
+      description: Schema for token refresh request.
+    TokenResponse:
+      properties:
+        access_token:
+          type: string
+          title: Access Token
+        refresh_token:
+          type: string
+          title: Refresh Token
+        token_type:
+          type: string
+          title: Token Type
+          default: bearer
+        expires_in:
+          type: integer
+          title: Expires In
+          description: Token expiry in seconds
+      type: object
+      required:
+      - access_token
+      - refresh_token
+      - expires_in
+      title: TokenResponse
+      description: "Token response after successful authentication.\n\nAttributes:\n\
+        \    access_token: JWT access token (short-lived)\n    refresh_token: JWT\
+        \ refresh token (long-lived)\n    token_type: Always \"bearer\"\n    expires_in:\
+        \ Access token TTL in seconds"
+    ToolGenerateRequest:
+      properties:
+        tool_type:
+          $ref: '#/components/schemas/ToolType'
+        topic:
+          type: string
+          maxLength: 255
+          minLength: 1
+          title: Topic
+        subject:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Subject
+        grade_level:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Grade Level
+        language:
+          type: string
+          pattern: ^(gu|en|gu-en)$
+          title: Language
+          default: en
+        additional_instructions:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Additional Instructions
+      type: object
+      required:
+      - tool_type
+      - topic
+      title: ToolGenerateRequest
+      description: Request to generate a teaching tool.
+    ToolType:
+      type: string
+      enum:
+      - mind_map
+      - lesson_plan
+      - analogy
+      title: ToolType
+      description: Types of teaching tools.
+    UserCreate:
+      properties:
+        email:
+          type: string
+          format: email
+          title: Email
+          description: User email address
+        password:
+          type: string
+          maxLength: 100
+          minLength: 8
+          title: Password
+          description: Password (min 8 characters)
+        full_name:
+          type: string
+          maxLength: 255
+          minLength: 2
+          title: Full Name
+          description: Full name in English
+        full_name_gujarati:
+          anyOf:
+          - type: string
+            maxLength: 255
+          - type: 'null'
+          title: Full Name Gujarati
+          description: Full name in Gujarati
+        phone:
+          anyOf:
+          - type: string
+            maxLength: 20
+          - type: 'null'
+          title: Phone
+          description: Phone number
+        language_preference:
+          $ref: '#/components/schemas/LanguagePreference'
+          description: Preferred language for AI responses
+          default: gu
+        grade_level:
+          anyOf:
+          - type: string
+            maxLength: 20
+          - type: 'null'
+          title: Grade Level
+          description: Student's grade level
+        institution_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Institution Id
+          description: Associated institution ID
+      type: object
+      required:
+      - email
+      - password
+      - full_name
+      title: UserCreate
+      description: "Schema for user registration.\n\nAttributes:\n    email: Valid\
+        \ email address\n    password: Password (min 8 chars)\n    full_name: User's\
+        \ full name\n    full_name_gujarati: Name in Gujarati (optional)\n    phone:\
+        \ Phone number (optional)\n    language_preference: Preferred language (default:\
+        \ Gujarati)\n    grade_level: For students (optional)\n    institution_id:\
+        \ Associated institution (optional)"
+    UserLogin:
+      properties:
+        email:
+          type: string
+          format: email
+          title: Email
+          description: Email address
+        password:
+          type: string
+          title: Password
+          description: Password
+      type: object
+      required:
+      - email
+      - password
+      title: UserLogin
+      description: "Schema for user login.\n\nAttributes:\n    email: User's email\
+        \ address\n    password: User's password"
+    UserResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        email:
+          type: string
+          title: Email
+        full_name:
+          type: string
+          title: Full Name
+        full_name_gujarati:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Full Name Gujarati
+        phone:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Phone
+        profile_image_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Profile Image Url
+        language_preference:
+          $ref: '#/components/schemas/LanguagePreference'
+        grade_level:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Grade Level
+        subjects:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Subjects
+        is_active:
+          type: boolean
+          title: Is Active
+        is_email_verified:
+          type: boolean
+          title: Is Email Verified
+        last_login_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Login At
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        role:
+          anyOf:
+          - $ref: '#/components/schemas/RoleResponse'
+          - type: 'null'
+        institution:
+          anyOf:
+          - $ref: '#/components/schemas/InstitutionBrief'
+          - type: 'null'
+      type: object
+      required:
+      - id
+      - email
+      - full_name
+      - language_preference
+      - is_active
+      - is_email_verified
+      - created_at
+      title: UserResponse
+      description: 'User response schema.
+
+
+        Used for returning user data in API responses.'
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+    VocabularyItemResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        gujarati_word:
+          type: string
+          title: Gujarati Word
+        english_translation:
+          type: string
+          title: English Translation
+        transliteration:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Transliteration
+        difficulty_level:
+          type: integer
+          title: Difficulty Level
+        category:
+          type: string
+          title: Category
+        image_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Image Url
+        audio_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Audio Url
+        example_sentence:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Example Sentence
+      type: object
+      required:
+      - id
+      - gujarati_word
+      - english_translation
+      - difficulty_level
+      - category
+      title: VocabularyItemResponse
+      description: Vocabulary item details.
+    VocabularyLessonItem:
+      properties:
+        type:
+          type: string
+          title: Type
+          description: '''new'' or ''review'''
+        progress_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Progress Id
+        word:
+          $ref: '#/components/schemas/VocabularyItemResponse'
+      type: object
+      required:
+      - type
+      - word
+      title: VocabularyLessonItem
+      description: Item in a daily lesson.
+    VocabularyProgressSubmit:
+      properties:
+        quality:
+          type: integer
+          maximum: 5.0
+          minimum: 0.0
+          title: Quality
+          description: 0=Forgot, 5=Perfect
+      type: object
+      required:
+      - quality
+      title: VocabularyProgressSubmit
+      description: Submission of study result.
+  securitySchemes:
+    HTTPBearer:
+      type: http
+      scheme: bearer
+tags:
+- name: Health
+  description: Health check and service status endpoints
+- name: Authentication
+  description: User registration, login, and token management
+- name: Question Papers
+  description: AI-powered question paper generation and management
+- name: Assignments
+  description: Assignment submission and AI-generated solutions
+- name: Help Sessions
+  description: Socratic tutoring and interactive help
+- name: Teaching Tools
+  description: Mind maps, slides, and educational materials
+- name: Paper Checking
+  description: OCR-based paper evaluation and grading
+- name: Learning
+  description: Gujarati language learning features
+- name: Audio
+  description: Speech-to-text and text-to-speech services
+externalDocs:
+  description: BhashaAI Documentation
+  url: https://docs.bhashaai.com

@@ -38,6 +38,17 @@ class AssignmentSubmit(AssignmentBase):
     question_image_url: Optional[str] = None
 
 
+class AssignmentCreate(BaseModel):
+    """Schema for creating a new assignment from a QP."""
+    title: str
+    description: Optional[str] = None
+    question_paper_id: UUID
+    due_date: Optional[datetime] = None
+    status: str = "published"
+    mode: str = "solve" # solve or help mode default for this assignment
+
+
+
 class SolutionResponse(BaseModel):
     """Detailed solution response schema."""
     

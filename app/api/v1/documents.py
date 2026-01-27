@@ -9,7 +9,10 @@ from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi.responses import StreamingResponse
+from urllib.parse import quote
 from sqlalchemy.ext.asyncio import AsyncSession
+from io import BytesIO
 
 from app.api.deps import get_current_user, get_db
 from app.models import User
@@ -271,3 +274,59 @@ async def delete_document(
         message="Document deleted successfully",
         message_gu="ડોક્યુમેન્ટ સફળતાપૂર્વક કાઢી નાખ્યું",
     )
+
+
+@router.get(
+    "/{document_id}/download",
+    status_code=status.HTTP_200_OK,
+    summary="Download Document",
+    description="Download the document file.",
+)
+async def download_document(
+    document_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Download document file."""
+    doc_service = DocumentService(db)
+    
+    # Check access
+    document = await doc_service.get_document(
+        document_id=document_id,
+        user_id=UUID(str(current_user.id)),
+    )
+    
+    if not document:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "success": False,
+                "message": "Document not found",
+                "message_gu": "ડોક્યુમેન્ટ મળ્યું નથી",
+            }
+        )
+
+    # Get file content
+    try:
+        file_content = doc_service.download_document_file(document)
+        
+        # Determine filename (encode for safe HTTP headers)
+        filename = quote(document.filename)
+        
+        return StreamingResponse(
+            BytesIO(file_content),
+            media_type=document.mime_type,
+            headers={
+                "Content-Disposition": f"attachment; filename*=UTF-8''{filename}"
+            }
+        )
+    except Exception as e:
+        logger.error(f"Download failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "success": False,
+                "message": "Failed to retrieve file",
+                "message_gu": "ફાઇલ પુનઃપ્રાપ્ત કરવામાં નિષ્ફળ",
+            }
+        )

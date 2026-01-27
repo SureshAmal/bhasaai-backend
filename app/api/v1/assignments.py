@@ -13,6 +13,7 @@ from app.models import User
 from app.schemas.assignment import (
     AssignmentListResponse,
     AssignmentResponse,
+    AssignmentCreate,
     AssignmentSubmit,
     HintRequest,
     HintResponse,
@@ -53,6 +54,35 @@ async def submit_assignment(
     return APIResponse(
         success=True,
         message="Assignment submitted successfully",
+        data=AssignmentResponse.from_orm_with_details(assignment)
+    )
+
+
+@router.post(
+    "",
+    response_model=APIResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create Assignment",
+    description="Publish a question paper as an assignment.",
+)
+async def create_assignment(
+    data: AssignmentCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Create a new assignment (Teacher only).
+    """
+    service = AssignmentService(db)
+    assignment = await service.create_assignment(
+        user_id=UUID(str(current_user.id)),
+        data=data 
+    )
+    assignment = await service.get_assignment(assignment.id, current_user.id)
+    
+    return APIResponse(
+        success=True,
+        message="Assignment created successfully",
         data=AssignmentResponse.from_orm_with_details(assignment)
     )
 
@@ -136,7 +166,13 @@ async def get_hint(
         raise HTTPException(status_code=404, detail="Assignment not found")
         
     if not assignment.help_session:
-        raise HTTPException(status_code=400, detail="No active help session for this assignment")
+        # Lazy initialization for existing assignments
+        await service.start_help_session(assignment)
+        # Reload to get session
+        assignment = await service.get_assignment(assignment_id, UUID(str(current_user.id)))
+        
+        if not assignment or not assignment.help_session:
+            raise HTTPException(status_code=500, detail="Failed to initialize help session")
         
     hint_data = await service.generate_hint(
         session=assignment.help_session,

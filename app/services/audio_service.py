@@ -1,14 +1,9 @@
-"""
-BhashaAI Backend - Audio Service
-
-Handles Text-to-Speech (TTS) generation for Gujarati language learning.
-Uses Google Text-to-Speech (gTTS) for the prototype.
-"""
-
-import os
 import logging
+from io import BytesIO
 from uuid import uuid4
 from gtts import gTTS
+
+from app.core.storage import get_storage_service
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -18,43 +13,49 @@ class AudioService:
     Service for generating and managing audio content.
     """
     
-    def __init__(self, storage_path: str = "static/audio"):
-        self.storage_path = storage_path
-        os.makedirs(self.storage_path, exist_ok=True)
+    def __init__(self):
+        self.storage = get_storage_service()
+        self.folder = "audio"
         
     async def generate_pronunciation(self, text: str, lang: str = "gu") -> str:
         """
-        Generate TTS audio for the given text.
+        Generate TTS audio and upload to MinIO.
         
         Args:
             text: Text to convert to speech
-            lang: Language code (default: 'gu' for Gujarati)
+            lang: Language code (default: 'gu')
             
         Returns:
-            str: Relative URL/path to the generated audio file
+            str: Public/Presigned URL to the audio file
         """
         try:
             # Generate unique filename
             filename = f"{uuid4().hex}.mp3"
-            file_path = os.path.join(self.storage_path, filename)
             
-            # gTTS generation (Runs synchronously, might block event loop if heavy usage)
-            # In validation/production, run in thread/executor
+            # gTTS generation to memory
             tts = gTTS(text=text, lang=lang)
-            tts.save(file_path)
+            mp3_fp = BytesIO()
+            tts.write_to_fp(mp3_fp)
+            mp3_fp.seek(0)
             
-            logger.info(f"Generated audio for '{text}' at {file_path}")
+            # Upload to MinIO
+            object_name = self.storage.upload_file(
+                file_data=mp3_fp,
+                filename=filename,
+                content_type="audio/mpeg",
+                folder=self.folder
+            )
             
-            # Return relative path for frontend access
-            # Assuming static files are served from /static
-            return f"/static/audio/{filename}"
+            logger.info(f"Generated and uploaded audio for '{text}' as {object_name}")
+            
+            # Return URL
+            # For public/learning content, we might want a permanent URL or long expiry
+            return self.storage.get_presigned_url(object_name, expires_hours=24)
             
         except Exception as e:
             logger.error(f"TTS Generation failed: {e}")
-            # Return None or raise? For prototype, returning None lets UI handle it or show error
             return ""
 
     async def get_audio_url(self, text: str) -> str:
         """Wrapper to get or create audio."""
-        # Ideally check if hash(text) exists to avoid regenerating
         return await self.generate_pronunciation(text)

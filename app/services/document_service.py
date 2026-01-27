@@ -254,3 +254,15 @@ class DocumentService:
     def get_download_url(self, document: Document, expires_hours: int = 1) -> str:
         """Get presigned download URL for document."""
         return self.storage.get_presigned_url(document.file_url, expires_hours)
+
+    def download_document_file(self, document: Document) -> bytes:
+        """
+        Download file content from storage.
+        
+        Args:
+            document: Document object
+            
+        Returns:
+            bytes: File content
+        """
+        return self.storage.download_file(document.file_url)
