@@ -376,6 +376,7 @@ Return ONLY valid JSON matching this structure:
 {{
     "translation": "The translated word in target language",
     "transliteration": "Romanized pronunciation (for Gujarati words)",
+
     "part_of_speech": "noun|verb|adjective|adverb|pronoun|preposition|conjunction|interjection",
     "meaning": "Definition in English",
     "meaning_gujarati": "Definition in Gujarati (ગુજરાતી)",
@@ -394,5 +395,41 @@ Rules:
 5. Be accurate with part of speech.
 
 Return ONLY the JSON object."""
+)
+
+
+# --- FLASHCARD PROMPT ---
+
+FLASHCARD_GENERATION_PROMPT = PromptTemplate(
+    input_variables=["topic", "text", "subject", "grade_level", "count", "language_instruction"],
+    template="""Create {count} educational flashcards based on the following content.
+    
+Topic: {topic}
+Subject: {subject}
+Grade: {grade_level}
+
+Content/Context:
+{text}
+
+{language_instruction}
+
+Return ONLY a valid JSON object matching this structure:
+{{
+    "cards": [
+        {{
+            "front": "Term or Question (e.g. 'Photosynthesis')",
+            "back": "Definition or Answer (e.g. 'Process by which plants...')",
+            "hint": "Optional short hint"
+        }},
+        ...
+    ]
+}}
+
+Rules:
+1. 'front' should be concise.
+2. 'back' should be clear and accurate.
+3. Generate exactly {count} cards.
+4. Return ONLY the JSON object.
+"""
 )
 

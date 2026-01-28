@@ -61,6 +61,7 @@ from app.models.learning import (
 )
 from app.models.worksheet import Worksheet, WorksheetQuestion, WorksheetAttempt, WorksheetStatus, AttemptStatus
 from app.models.dictionary import DictionaryEntry, UserDictionaryHistory
+from app.models.flashcard import FlashcardDeck, Flashcard
 
 __all__ = [
     # Base
@@ -136,4 +137,7 @@ __all__ = [
     "DictionaryEntry",
     "UserDictionaryHistory",
     "TranslationDirection",
+    # Phase 10 Models - Flashcards
+    "FlashcardDeck",
+    "Flashcard",
 ]

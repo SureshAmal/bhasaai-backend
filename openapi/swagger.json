@@ -2908,6 +2908,200 @@
           }
         }
       }
+    },
+    "/api/v1/flashcards/generate": {
+      "post": {
+        "tags": [
+          "Flashcards",
+          "Flashcards"
+        ],
+        "summary": "Generate Flashcards",
+        "description": "Generate flashcard content from topic or document using AI.",
+        "operationId": "generate_flashcards_api_v1_flashcards_generate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FlashcardGenerateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/flashcards": {
+      "post": {
+        "tags": [
+          "Flashcards",
+          "Flashcards"
+        ],
+        "summary": "Create Deck",
+        "description": "Create a new flashcard deck.",
+        "operationId": "create_deck_api_v1_flashcards_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FlashcardDeckCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Flashcards",
+          "Flashcards"
+        ],
+        "summary": "List Decks",
+        "description": "List user's flashcard decks.",
+        "operationId": "list_decks_api_v1_flashcards_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/flashcards/{deck_id}": {
+      "get": {
+        "tags": [
+          "Flashcards",
+          "Flashcards"
+        ],
+        "summary": "Get Deck",
+        "description": "Get deck details and cards.",
+        "operationId": "get_deck_api_v1_flashcards__deck_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "deck_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Deck Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4393,6 +4587,162 @@
         ],
         "title": "DocumentUploadResponse",
         "description": "Schema for document upload response."
+      },
+      "FlashcardCreate": {
+        "properties": {
+          "front": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Front",
+            "description": "Question or term on front"
+          },
+          "back": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Back",
+            "description": "Answer or definition on back"
+          },
+          "hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hint",
+            "description": "Optional hint"
+          },
+          "order_index": {
+            "type": "integer",
+            "title": "Order Index",
+            "description": "Order in the deck",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "front",
+          "back"
+        ],
+        "title": "FlashcardCreate",
+        "description": "Schema for creating a flashcard."
+      },
+      "FlashcardDeckCreate": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject"
+          },
+          "is_public": {
+            "type": "boolean",
+            "title": "Is Public",
+            "default": false
+          },
+          "cards": {
+            "items": {
+              "$ref": "#/components/schemas/FlashcardCreate"
+            },
+            "type": "array",
+            "title": "Cards",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "title": "FlashcardDeckCreate",
+        "description": "Schema for creating a deck."
+      },
+      "FlashcardGenerateRequest": {
+        "properties": {
+          "topic": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Topic"
+          },
+          "document_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Id"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject"
+          },
+          "grade_level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade Level"
+          },
+          "count": {
+            "type": "integer",
+            "maximum": 50.0,
+            "minimum": 5.0,
+            "title": "Count",
+            "default": 10
+          },
+          "language": {
+            "type": "string",
+            "title": "Language",
+            "default": "gu"
+          }
+        },
+        "type": "object",
+        "title": "FlashcardGenerateRequest",
+        "description": "Request to generate flashcards from content."
       },
       "GeneratePaperRequest": {
         "properties": {
