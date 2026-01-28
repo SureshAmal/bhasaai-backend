@@ -8,7 +8,7 @@ Endpoints for:
 - Audio/TTS Services
 """
 
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -52,15 +52,21 @@ async def get_profile(
 )
 async def get_daily_vocabulary(
     limit: int = 10,
+    mode: Optional[str] = None,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """
     Get today's vocabulary lesson.
     Returns a mix of 'review' items (due today) and 'new' items.
+    Use mode='practice' to force fetch additional items (review ahead).
     """
     service = LearningService(db)
-    items = await service.get_daily_vocabulary(current_user.id, limit=limit)
+    items = await service.get_daily_vocabulary(
+        current_user.id, 
+        limit=limit,
+        practice=(mode == "practice")
+    )
     
     # Transform to schema
     # service returns list of dicts: {'type':..., 'word': obj}

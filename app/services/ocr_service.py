@@ -29,17 +29,31 @@ class OCRService:
         """
         logger.info(f"Extracting text from {file_path}")
         
-        # TODO: Integrate valid OCR provider
-        # For prototype/hackathon, we return a placeholder or use simple library
-        
-        return """
-        Student Name: Priya Shah
-        Date: 26/01/2026
-        
-        Q1. Photosynthesis is the process by which plants make their own food using sunlight.
-        Q2. Newton's first law states that an object will remain at rest unless an external force acts on it.
-        Answer 3: The capital of Gujarat is Gandhinagar.
-        """
+        try:
+            # 1. Handle PDF
+            if file_path.lower().endswith('.pdf') or mime_type == 'application/pdf':
+                from pypdf import PdfReader
+                try:
+                    reader = PdfReader(file_path)
+                    text = ""
+                    for page in reader.pages:
+                        extracted = page.extract_text()
+                        if extracted:
+                            text += extracted + "\n"
+                    
+                    if text.strip():
+                        return text
+                except Exception as e:
+                    logger.error(f"pypdf extraction failed: {e}")
+            
+            # 2. Handle Images (Placeholder/LLM Vision would go here)
+            # For now, if pypdf fails or it's an image without Tesseract, 
+            # we return empty string or specific error to avoid hallucination.
+            return "" 
+
+        except Exception as e:
+            logger.error(f"OCR extraction failed: {e}")
+            return ""
 
     @staticmethod
     def segment_answers(raw_text: str) -> List[dict]:

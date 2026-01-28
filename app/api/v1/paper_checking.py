@@ -259,12 +259,17 @@ async def extract_answer_key(
         APIResponse with extracted data
     """
     # Validate file type
-    allowed_types = {"application/pdf", "image/jpeg", "image/png", "image/webp"}
+    # Validate file type
+    allowed_types = {"application/pdf", "image/jpeg", "image/png", "image/webp", "application/octet-stream"}
     if file.content_type not in allowed_types:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid file type. Allowed: PDF, JPEG, PNG, WebP",
-        )
+        # Check extension if octet-stream
+        is_pdf_ext = file.filename.lower().endswith('.pdf') if file.filename else False
+        
+        if not (is_pdf_ext and (file.content_type == 'application/octet-stream' or file.content_type == 'binary/octet-stream')):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid file type: {file.content_type}. Allowed: PDF, JPEG, PNG, WebP",
+            )
     
     # Save to temp file
     suffix = os.path.splitext(file.filename)[1] if file.filename else ""
@@ -335,12 +340,19 @@ async def submit_paper_for_checking(
         APIResponse with submission ID and status
     """
     # Validate file type
-    allowed_types = {"application/pdf", "image/jpeg", "image/png", "image/webp"}
+    # Validate file type
+    allowed_types = {"application/pdf", "image/jpeg", "image/png", "image/webp", "application/octet-stream"}
+    
+    # Relaxed validation for PDF octet-stream
     if file.content_type not in allowed_types:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid file type. Allowed: PDF, JPEG, PNG, WebP",
-        )
+        # Check extension if octet-stream
+        is_pdf_ext = file.filename.lower().endswith('.pdf') if file.filename else False
+        
+        if not (is_pdf_ext and (file.content_type == 'application/octet-stream' or file.content_type == 'binary/octet-stream')):
+             raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid file type: {file.content_type}. Allowed: PDF, JPEG, PNG, WebP",
+            )
     
     service = PaperCheckingService(db)
     

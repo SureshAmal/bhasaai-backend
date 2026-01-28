@@ -48,11 +48,12 @@ class LearningService:
             
         return profile
 
-    async def get_daily_vocabulary(self, user_id: UUID, limit: int = 10) -> List[dict]:
+    async def get_daily_vocabulary(self, user_id: UUID, limit: int = 10, practice: bool = False) -> List[dict]:
         """
         Get words to learn today:
         1. Words due for review (SM-2 scheduled)
         2. New words (if review count < limit)
+        3. [Practice Mode] Future reviews if today is done
         """
         now = datetime.now(timezone.utc)
         
@@ -102,8 +103,43 @@ class LearningService:
                     "progress_id": None, 
                     "word": w
                 })
+        
+        # 3. Practice Mode: Fetch upcoming reviews if still empty
+        remaining = limit - len(items)
+        if practice and remaining > 0:
+            future_stmt = (
+                select(UserWordProgress)
+                .options(selectinload(UserWordProgress.vocabulary_item))
+                .where(
+                    UserWordProgress.user_id == str(user_id),
+                    UserWordProgress.next_review_date > now # Future
+                )
+                .order_by(func.random()) # SHUFFLE for variety in practice mode
+                .limit(remaining)
+            )
+            future_result = await self.db.execute(future_stmt)
+            future_reviews = future_result.scalars().all()
+            
+            for r in future_reviews:
+                 items.append({
+                    "type": "practice", 
+                    "progress_id": r.id,
+                    "word": r.vocabulary_item
+                })
+
+        # Deduplicate items by content (gujarati_word) to prevent "same question" if DB has duplicates
+        unique_items = []
+        seen_content = set()
+        
+        for item in items:
+            # word is VocabularyItem object
+            # Use the actual word text for deduplication
+            content = item["word"].gujarati_word
+            if content not in seen_content:
+                seen_content.add(content)
+                unique_items.append(item)
                 
-        return items
+        return unique_items
 
     async def update_word_progress(self, user_id: UUID, word_id: UUID, quality: int) -> UserWordProgress:
         """

@@ -224,7 +224,9 @@ Rules:
 1. Infer types based on content (Options present = MCQ).
 2. Infer marks if mentioned (e.g. "[2 marks]"), otherwise default to 1.
 3. If no clear correct answer is found, leave 'expected_answer' empty but create the question entry.
-4. Return ONLY valid JSON.
+4. If NO questions are found in the text, return {{ "answers": [], "error": "No questions found in text" }}.
+5. Do NOT hallucinate or invent questions not present in the text.
+6. Return ONLY valid JSON.
 """
 )
 
