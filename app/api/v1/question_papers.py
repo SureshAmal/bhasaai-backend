@@ -391,3 +391,70 @@ async def publish_paper(
         message_gu="પ્રશ્નપત્ર સફળતાપૂર્વક પ્રકાશિત થયું",
         data={"id": str(paper.id), "status": paper.status.value},
     )
+
+
+from fastapi.responses import StreamingResponse
+from app.services.pdf_service import PDFService
+import io
+
+@router.get(
+    "/{paper_id}/download",
+    response_class=StreamingResponse,
+    summary="Download Question Paper PDF",
+    description="Download question paper as PDF with proper formatting.",
+)
+async def download_paper_pdf(
+    paper_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Generate and download PDF for a question paper.
+    Supporting English and Gujarati text.
+    """
+    # 1. Get paper details
+    paper_service = QuestionPaperService(db)
+    paper = await paper_service.get_paper(
+        paper_id=paper_id,
+        user_id=UUID(str(current_user.id)),
+    )
+    
+    if not paper:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "success": False,
+                "message": "Question paper not found",
+                "message_gu": "પ્રશ્નપત્ર મળ્યું નથી",
+            }
+        )
+    
+    # 2. Generate PDF
+    try:
+        pdf_service = PDFService()
+        pdf_bytes = pdf_service.generate_question_paper(paper)
+        
+        # 3. Stream response
+        # Use safe ASCII filename to avoid header encoding errors
+        safe_filename = f"paper_{str(paper.id)[:8]}.pdf"
+        
+        return StreamingResponse(
+            io.BytesIO(pdf_bytes),
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={safe_filename}"}
+        )
+    except Exception as e:
+        import traceback
+        with open("pdf_debug_error.log", "w") as f:
+            f.write(f"Error: {str(e)}\n\n")
+            traceback.print_exc(file=f)
+            
+        logger.error(f"PDF generation failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "success": False,
+                "message": "Failed to generate PDF",
+                "message_gu": "PDF જનરેટ કરવામાં નિષ્ફળ",
+            }
+        )

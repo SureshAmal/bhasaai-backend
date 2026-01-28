@@ -31,6 +31,7 @@ dependencies = [
     "langchain-google-genai>=4.2.0",
     "langchain-core>=1.2.7",
     "gtts>=2.5.4",
+    "fpdf2>=2.8.5",
 ]
 
 [dependency-groups]

@@ -1011,6 +1011,49 @@
         }
       }
     },
+    "/api/v1/question-papers/{paper_id}/download": {
+      "get": {
+        "tags": [
+          "Question Papers",
+          "Question Papers"
+        ],
+        "summary": "Download Question Paper PDF",
+        "description": "Download question paper as PDF with proper formatting.",
+        "operationId": "download_paper_pdf_api_v1_question_papers__paper_id__download_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "paper_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Paper Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/assignments/submit": {
       "post": {
         "tags": [
