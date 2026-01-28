@@ -32,6 +32,7 @@ from app.models.enums import (
     ProcessingStatus,
     QuestionType,
     SubscriptionPlan,
+    TranslationDirection,
 )
 from app.models.institution import Institution
 from app.models.role import Role
@@ -59,6 +60,7 @@ from app.models.learning import (
     ExerciseType,
 )
 from app.models.worksheet import Worksheet, WorksheetQuestion, WorksheetAttempt, WorksheetStatus, AttemptStatus
+from app.models.dictionary import DictionaryEntry, UserDictionaryHistory
 
 __all__ = [
     # Base
@@ -130,4 +132,8 @@ __all__ = [
     "WorksheetAttempt",
     "WorksheetStatus",
     "AttemptStatus",
+    # Phase 9 Models - Dictionary
+    "DictionaryEntry",
+    "UserDictionaryHistory",
+    "TranslationDirection",
 ]

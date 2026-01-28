@@ -67,6 +67,12 @@ api_v1_router.include_router(
     tags=["Worksheets"],
 )
 
+from app.api.v1.dictionary import router as dictionary_router
+api_v1_router.include_router(
+    dictionary_router,
+    tags=["Dictionary"],
+)
+
 # Placeholder routers for future implementation:
 # api_v1_router.include_router(help_router, prefix="/help-sessions", tags=["Help Sessions"])
 # api_v1_router.include_router(audio_router, prefix="/audio", tags=["Audio"])

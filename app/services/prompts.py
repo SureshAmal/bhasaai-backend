@@ -344,3 +344,43 @@ Return valid JSON:
 }}
 Return ONLY the JSON."""
 )
+
+
+# --- DICTIONARY TRANSLATION PROMPT ---
+
+DICTIONARY_TRANSLATION_PROMPT = PromptTemplate(
+    input_variables=["word", "direction", "language_instruction"],
+    template="""You are an expert English-Gujarati bilingual dictionary.
+
+Given a word, provide a complete dictionary entry with translation, meaning, 
+part of speech, and examples.
+
+Word: {word}
+Direction: {direction}
+
+{language_instruction}
+
+Return ONLY valid JSON matching this structure:
+{{
+    "translation": "The translated word in target language",
+    "transliteration": "Romanized pronunciation (for Gujarati words)",
+    "part_of_speech": "noun|verb|adjective|adverb|pronoun|preposition|conjunction|interjection",
+    "meaning": "Definition in English",
+    "meaning_gujarati": "Definition in Gujarati (ગુજરાતી)",
+    "example_sentence": "Example sentence using the word in source language",
+    "example_sentence_translation": "Translation of the example sentence",
+    "synonyms": ["synonym1", "synonym2"],
+    "antonyms": ["antonym1", "antonym2"],
+    "confidence": 0.95
+}}
+
+Rules:
+1. If English to Gujarati: provide Gujarati translation with transliteration.
+2. If Gujarati to English: provide English translation.
+3. Include at least 2 synonyms if available.
+4. Provide a natural example sentence.
+5. Be accurate with part of speech.
+
+Return ONLY the JSON object."""
+)
+

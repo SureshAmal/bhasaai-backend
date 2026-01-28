@@ -224,3 +224,9 @@ class AudioRequestType(str, enum.Enum):
     TTS = "tts"
     STT = "stt"
     PRONUNCIATION = "pronunciation"
+
+
+class TranslationDirection(str, enum.Enum):
+    """Direction for dictionary translations."""
+    EN_TO_GU = "en_to_gu"
+    GU_TO_EN = "gu_to_en"

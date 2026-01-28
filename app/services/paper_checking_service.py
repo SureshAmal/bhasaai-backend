@@ -298,7 +298,8 @@ class PaperCheckingService:
             paper.extracted_text = extracted_text
             
             # 2. Get Answer Key
-            answer_key = await self.get_answer_key(UUID(paper.answer_key_id))
+            # paper.answer_key_id is already a UUID object due to as_uuid=True
+            answer_key = await self.get_answer_key(paper.answer_key_id)
             if not answer_key:
                 raise ValueError("Answer key not found")
             
@@ -326,7 +327,7 @@ class PaperCheckingService:
             
         except Exception as e:
             logger.error(f"Failed to process paper {paper_id}: {e}")
-            paper.status = CheckedPaperStatus.PENDING  # Reset to allow retry
+            paper.status = CheckedPaperStatus.FAILED  # Mark as failed on error
             paper.overall_feedback = f"Processing failed: {str(e)}"
             await self.db.commit()
     

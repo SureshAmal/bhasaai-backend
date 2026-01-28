@@ -2518,6 +2518,270 @@
           }
         }
       }
+    },
+    "/api/v1/dictionary/lookup": {
+      "post": {
+        "tags": [
+          "Dictionary",
+          "Dictionary"
+        ],
+        "summary": "Lookup/Translate Word",
+        "description": "Lookup a word in the bilingual dictionary. Returns cached result or generates translation via LLM.",
+        "operationId": "lookup_word_api_v1_dictionary_lookup_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DictionaryLookupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse_DictionaryEntryResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/dictionary/history": {
+      "get": {
+        "tags": [
+          "Dictionary",
+          "Dictionary"
+        ],
+        "summary": "Get Search History",
+        "description": "Get user's word lookup history.",
+        "operationId": "get_history_api_v1_dictionary_history_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Page number",
+              "default": 1,
+              "title": "Page"
+            },
+            "description": "Page number"
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "Items per page",
+              "default": 50,
+              "title": "Per Page"
+            },
+            "description": "Items per page"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse_SearchHistoryResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/dictionary/history/{history_id}": {
+      "delete": {
+        "tags": [
+          "Dictionary",
+          "Dictionary"
+        ],
+        "summary": "Delete History Item",
+        "description": "Remove a word from search history.",
+        "operationId": "delete_history_item_api_v1_dictionary_history__history_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "history_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "History Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse_dict_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/dictionary/popular": {
+      "get": {
+        "tags": [
+          "Dictionary",
+          "Dictionary"
+        ],
+        "summary": "Get Popular Words",
+        "description": "Get most frequently looked up words.",
+        "operationId": "get_popular_words_api_v1_dictionary_popular_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "description": "Number of words",
+              "default": 10,
+              "title": "Limit"
+            },
+            "description": "Number of words"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse_list_DictionaryEntryResponse__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/dictionary/{entry_id}": {
+      "get": {
+        "tags": [
+          "Dictionary",
+          "Dictionary"
+        ],
+        "summary": "Get Dictionary Entry",
+        "description": "Get a cached dictionary entry by ID.",
+        "operationId": "get_entry_api_v1_dictionary__entry_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "entry_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Entry Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIResponse_DictionaryEntryResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2619,6 +2883,55 @@
           "success"
         ],
         "title": "APIResponse[AuthResponse]"
+      },
+      "APIResponse_DictionaryEntryResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether the operation was successful"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DictionaryEntryResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Response data payload"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message",
+            "description": "Human-readable message (English)"
+          },
+          "message_gu": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message Gu",
+            "description": "Human-readable message (Gujarati / ગુજરાતી)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success"
+        ],
+        "title": "APIResponse[DictionaryEntryResponse]"
       },
       "APIResponse_HealthResponse_": {
         "properties": {
@@ -2820,6 +3133,55 @@
         ],
         "title": "APIResponse[ProgressResponse]"
       },
+      "APIResponse_SearchHistoryResponse_": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether the operation was successful"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SearchHistoryResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Response data payload"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message",
+            "description": "Human-readable message (English)"
+          },
+          "message_gu": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message Gu",
+            "description": "Human-readable message (Gujarati / ગુજરાતી)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success"
+        ],
+        "title": "APIResponse[SearchHistoryResponse]"
+      },
       "APIResponse_TokenResponse_": {
         "properties": {
           "success": {
@@ -3019,6 +3381,59 @@
           "success"
         ],
         "title": "APIResponse[dict[str, Any]]"
+      },
+      "APIResponse_list_DictionaryEntryResponse__": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "description": "Whether the operation was successful"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/DictionaryEntryResponse"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data",
+            "description": "Response data payload"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message",
+            "description": "Human-readable message (English)"
+          },
+          "message_gu": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message Gu",
+            "description": "Human-readable message (Gujarati / ગુજરાતી)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success"
+        ],
+        "title": "APIResponse[list[DictionaryEntryResponse]]"
       },
       "AnswerItem": {
         "properties": {
@@ -3466,6 +3881,181 @@
           "file"
         ],
         "title": "Body_upload_document_api_v1_documents_upload_post"
+      },
+      "DictionaryEntryResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "Entry unique identifier"
+          },
+          "word": {
+            "type": "string",
+            "title": "Word",
+            "description": "Original word"
+          },
+          "language": {
+            "type": "string",
+            "title": "Language",
+            "description": "Source language (en/gu)"
+          },
+          "translation": {
+            "type": "string",
+            "title": "Translation",
+            "description": "Translated word"
+          },
+          "transliteration": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transliteration",
+            "description": "Romanized pronunciation"
+          },
+          "part_of_speech": {
+            "type": "string",
+            "title": "Part Of Speech",
+            "description": "Grammatical category"
+          },
+          "meaning": {
+            "type": "string",
+            "title": "Meaning",
+            "description": "Definition in English"
+          },
+          "meaning_gujarati": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meaning Gujarati",
+            "description": "Definition in Gujarati"
+          },
+          "example_sentence": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Example Sentence",
+            "description": "Example in source language"
+          },
+          "example_sentence_translation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Example Sentence Translation",
+            "description": "Example translated"
+          },
+          "synonyms": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Synonyms",
+            "description": "Similar words"
+          },
+          "antonyms": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Antonyms",
+            "description": "Opposite words"
+          },
+          "audio_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Audio Url",
+            "description": "TTS pronunciation URL"
+          },
+          "lookup_count": {
+            "type": "integer",
+            "title": "Lookup Count",
+            "description": "Times looked up",
+            "default": 0
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Entry creation time"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "word",
+          "language",
+          "translation",
+          "part_of_speech",
+          "meaning",
+          "created_at"
+        ],
+        "title": "DictionaryEntryResponse",
+        "description": "Full dictionary entry response.\n\nReturned when looking up or retrieving a cached word."
+      },
+      "DictionaryLookupRequest": {
+        "properties": {
+          "word": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Word",
+            "description": "Word to translate"
+          },
+          "direction": {
+            "$ref": "#/components/schemas/TranslationDirection",
+            "description": "Translation direction",
+            "default": "en_to_gu"
+          },
+          "include_examples": {
+            "type": "boolean",
+            "title": "Include Examples",
+            "description": "Include example sentences",
+            "default": true
+          },
+          "include_audio": {
+            "type": "boolean",
+            "title": "Include Audio",
+            "description": "Generate TTS audio pronunciation",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "word"
+        ],
+        "title": "DictionaryLookupRequest",
+        "description": "Request to lookup or translate a word.\n\nAttributes:\n    word: The word to translate (1-100 characters)\n    direction: Translation direction (EN→GU or GU→EN)\n    include_examples: Whether to include example sentences\n    include_audio: Whether to generate TTS audio",
+        "example": {
+          "direction": "en_to_gu",
+          "include_audio": false,
+          "include_examples": true,
+          "word": "hello"
+        }
       },
       "DifficultyDistribution": {
         "properties": {
@@ -4611,6 +5201,89 @@
         "title": "RoleResponse",
         "description": "Role information in responses."
       },
+      "SearchHistoryItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "History entry ID"
+          },
+          "word": {
+            "type": "string",
+            "title": "Word",
+            "description": "Looked up word"
+          },
+          "translation": {
+            "type": "string",
+            "title": "Translation",
+            "description": "Translation"
+          },
+          "part_of_speech": {
+            "type": "string",
+            "title": "Part Of Speech",
+            "description": "Grammatical category"
+          },
+          "lookup_count": {
+            "type": "integer",
+            "title": "Lookup Count",
+            "description": "Times this user looked up"
+          },
+          "last_looked_up": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Last Looked Up",
+            "description": "Most recent lookup"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "word",
+          "translation",
+          "part_of_speech",
+          "lookup_count",
+          "last_looked_up"
+        ],
+        "title": "SearchHistoryItem",
+        "description": "Single item in user's search history."
+      },
+      "SearchHistoryResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SearchHistoryItem"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "History entries"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Total items"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page",
+            "description": "Current page",
+            "default": 1
+          },
+          "per_page": {
+            "type": "integer",
+            "title": "Per Page",
+            "description": "Items per page",
+            "default": 50
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "SearchHistoryResponse",
+        "description": "Paginated list of user's search history."
+      },
       "StepFeedback": {
         "properties": {
           "is_correct": {
@@ -4823,6 +5496,15 @@
         ],
         "title": "ToolType",
         "description": "Types of teaching tools."
+      },
+      "TranslationDirection": {
+        "type": "string",
+        "enum": [
+          "en_to_gu",
+          "gu_to_en"
+        ],
+        "title": "TranslationDirection",
+        "description": "Direction for dictionary translations."
       },
       "UserCreate": {
         "properties": {
