@@ -84,17 +84,27 @@ LANGUAGE_INSTRUCTIONS = {
 # Document Summary Prompt
 DOCUMENT_SUMMARY_PROMPT = PromptTemplate(
     input_variables=["text", "language"],
-    template="""Summarize the following educational document in {language}.
-Focus on key concepts, definitions, and important topics that could be used for question generation.
-
-Document:
+    template="""Summarize the following educational document.
+Document Content:
 {text}
 
-Provide a structured summary with:
-1. Main Topics
-2. Key Concepts
-3. Important Definitions
-4. Potential Question Areas"""
+Requirements:
+1. Language: {language}
+2. Extract key educational elements.
+
+Return ONLY a valid JSON object with this structure:
+{{
+    "main_topics": ["Topic 1", "Topic 2"],
+    "key_concepts": [
+        {{ "concept": "Concept Name", "description": "Brief explanation" }}
+    ],
+    "definitions": [
+        {{ "term": "Term", "definition": "Definition" }}
+    ],
+    "potential_questions": ["Question 1?", "Question 2?"]
+}}
+
+Return ONLY the JSON object. Do not include markdown formatting like ```json."""
 )
 
 

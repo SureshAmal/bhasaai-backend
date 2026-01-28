@@ -283,6 +283,55 @@ class DocumentService:
         """Get presigned download URL for document."""
         return self.storage.get_presigned_url(document.file_url, expires_hours)
 
+    async def summarize_document(self, document_id: UUID, user_id: UUID, language: str = "gu") -> dict:
+        """
+        Summarize a document using AI.
+        
+        Args:
+            document_id: Document ID
+            user_id: User requesting summary
+            language: Output language (gu/en)
+            
+        Returns:
+            dict: Structured summary
+        """
+        document = await self.get_document(document_id, user_id)
+        if not document:
+            raise ValueError("Document not found")
+            
+        text = await self.extract_text(document)
+        if not text or not text.strip():
+            raise ValueError("Could not extract text from document")
+            
+        # Use LLM for summarization
+        from app.services.llm_service import get_llm_service
+        from app.services.prompts import DOCUMENT_SUMMARY_PROMPT
+        import json
+        
+        llm_service = get_llm_service()
+        chain = DOCUMENT_SUMMARY_PROMPT | llm_service.llm
+        
+        try:
+            # Limit text length to avoid context window issues
+            response = await chain.ainvoke({
+                "text": text[:15000], 
+                "language": "Gujarati" if language == "gu" else "English"
+            })
+            
+            content = response.content.strip()
+            
+            # Clean generic markdown
+            if "```json" in content:
+                content = content.split("```json")[1].split("```")[0]
+            elif "```" in content:
+                content = content.split("```")[1]
+                
+            return json.loads(content.strip())
+            
+        except Exception as e:
+            logger.error(f"Summarization failed: {e}")
+            raise ValueError(f"Failed to generate summary: {str(e)}")
+
     def download_document_file(self, document: Document) -> bytes:
         """
         Download file content from storage.

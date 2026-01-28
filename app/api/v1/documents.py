@@ -247,6 +247,60 @@ async def get_document(
     )
 
 
+@router.post(
+    "/{document_id}/summary",
+    response_model=APIResponse,
+    summary="Generate Document Summary",
+    description="Generate AI summary of the document content.",
+)
+async def summarize_document(
+    document_id: UUID,
+    language: Optional[str] = "gu",
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Generate summary for a document.
+    
+    Args:
+        document_id: Document UUID
+        language: Output language ('gu' or 'en')
+        
+    Returns:
+        Structured summary
+    """
+    doc_service = DocumentService(db)
+    
+    try:
+        summary = await doc_service.summarize_document(
+            document_id=document_id,
+            user_id=UUID(str(current_user.id)),
+            language=language or "gu",
+        )
+        
+        return APIResponse(
+            success=True,
+            message="Summary generated successfully",
+            message_gu="સારાંશ સફળતાપૂર્વક બનાવવામાં આવ્યો",
+            data=summary
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "success": False,
+                "message": str(e),
+                "message_gu": "સારાંશ બનાવવામાં નિષ્ફળ",
+            }
+        )
+    except Exception as e:
+        logger.error(f"Summary generation error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal Server Error"
+        )
+
+
 @router.delete(
     "/{document_id}",
     response_model=APIResponse,
